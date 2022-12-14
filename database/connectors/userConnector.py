@@ -11,8 +11,8 @@ def add_user(session: Session, username: str, first_name: str, last_name: str,
     if session.query(dbUser).filter(dbUser.username == username).first():
         raise UsernameTakenException()
 
-    user = dbUser(username=username, first_name=first_name,
-                  last_name=last_name, hashed_password=get_password_hash(password))
+    user = dbUser(user_name=username, first_name=first_name,
+                  last_name=last_name, user_password=get_password_hash(password))
     session.add(user)
     session.commit()
 
@@ -34,7 +34,7 @@ def update_user_by_index(session: Session, user_id: int, username: str, first_na
     if not user:
         raise UserNotFoundException()
 
-    user_err = session.query(dbUser).filter(dbUser.username == username,
+    user_err = session.query(dbUser).filter(dbUser.user_name == username,
                                             dbUser.user_id != user_id).first()
     if user_err:
         raise UsernameTakenException()
@@ -42,13 +42,11 @@ def update_user_by_index(session: Session, user_id: int, username: str, first_na
 
 
     if username:
-        user.username = username
+        user.user_name = username
     if first_name:
         user.first_name = first_name
     if last_name:
         user.last_name = last_name
-    # if privilege_id:
-    #     user.privilege_id = privilege_id
     if password:
         user.hashed_password = get_password_hash(password)
 
@@ -71,7 +69,7 @@ def get_all_users(session: Session, ) -> list[dbUser]:
 
 
 def get_user_by_username(session: Session, username: str) -> dbUser:
-    user = session.query(dbUser).filter(dbUser.username == username).first()
+    user = session.query(dbUser).filter(dbUser.user_name == username).first()
     if not user:
         raise UserNotFoundException()
 

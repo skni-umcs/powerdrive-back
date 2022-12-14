@@ -4,11 +4,6 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
-# from rest.privilege.schemas import Privilege
-# from rest.year.schemas import Year
-# from rest.registration.schemas import Registration
-
-
 class UserBase(BaseModel):
     id: int | None
     username: str | None
