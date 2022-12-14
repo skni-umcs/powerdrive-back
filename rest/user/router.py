@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from database.connectors import userConnector
-from database.exceptions.userExceptions import UserNotFoundException, UsernameTakenException, IndexTakenException
+from database.exceptions.userExceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -55,7 +55,7 @@ async def add_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         created_user = userConnector.add_user(db, user.username, user.first_name, user.last_name,
                                               user.password)
-    except (UsernameTakenException, IndexTakenException) as e:
+    except (UsernameTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
     return created_user
 
@@ -63,9 +63,9 @@ async def add_user(user: UserCreate, db: Session = Depends(get_db)):
 @api_router.put("/{user_id}", response_model=User)
 async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     try:
-        userConnector.update_user_by_index(db, user_id, user.username, user.umcs_index, user.first_name, user.last_name,
+        userConnector.update_user_by_index(db, user_id, user.username, user.first_name, user.last_name,
                                            user.password)
-    except (UserNotFoundException, UsernameTakenException, IndexTakenException) as e:
+    except (UserNotFoundException, UsernameTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
 
     return user

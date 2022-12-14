@@ -10,39 +10,31 @@ from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
-    # user_id: int | None
+    id: int | None
     username: str | None
+    password: str | None
+    email: str | None
     first_name: str | None
     last_name: str | None
+    description: str | None
 
-    # hashed_password: str | None
-    # privilege_id: int | None
-    # privilege: Privilege | None
-    # years: list[Year] | None
-    # registrations: list[Registration] | None
 
 
 class UserCreate(UserBase):
-    username: str
-    first_name: str
-    last_name: str
-    password: str
-    # hashed_password: str
-    # privilege_id: int
-    # privilege: Privilege
-    # years: list[Year]
-    # registrations: list[Registration]
-
+    username: str | None
+    first_name: str | None
+    last_name: str | None
+    password: str | None
 
 class UserUpdate(UserBase):
-    user_id: int
-    password: str | None
+    id: int
+    password: str
 
 
 class User(UserBase):
-    username: str
-    first_name: str
-    last_name: str
+    username: str | None
+    first_name: str | None
+    last_name: str | None
 
     class Config:
         orm_mode = True
