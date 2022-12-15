@@ -3,15 +3,15 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from database.connectors import userConnector
-from database.exceptions.userExceptions import UserNotFoundException, UsernameTakenException
+from ..database.connectors import userConnector
+from src.database.exceptions.userExceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from rest.user.schemas import User, UserCreate, UserUpdate
-from .security_utils import get_current_user, Token, TokenData, authenticate_user, create_access_token, \
+from src.user.schemas import User, UserCreate, UserUpdate
+from .security_utils import get_current_user, Token, authenticate_user, create_access_token, \
     ACCESS_TOKEN_EXPIRE_MINUTES
-from ..dependencies import get_db
+from src.dependencies import get_db
 
 api_router = APIRouter(prefix="/user", tags=["user"])
 
@@ -55,7 +55,7 @@ async def add_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         created_user = userConnector.add_user(db, user.username, user.first_name, user.last_name,
                                               user.password)
-    except (UsernameTakenException) as e:
+    except UsernameTakenException as e:
         raise HTTPException(status_code=404, detail=str(e))
     return created_user
 

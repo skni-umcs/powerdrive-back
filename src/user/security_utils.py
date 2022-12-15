@@ -1,17 +1,15 @@
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from database.connectors import userConnector
-from database.exceptions.userExceptions import UserNotFoundException
+from src.database.connectors import userConnector
+from src.database.exceptions.userExceptions import UserNotFoundException
 
 from pydantic import BaseModel
 
-from rest.user.schemas import User
+from src.user.schemas import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "09d25e094fa76ca2556c818166b7a9563b93fa099f6f0f4ca76cf63b85e8d3e7"

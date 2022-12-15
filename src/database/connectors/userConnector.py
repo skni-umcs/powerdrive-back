@@ -3,7 +3,7 @@
 from ..exceptions.userExceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
 from ..models import dbUser
-from rest.user.security_utils import get_password_hash
+from src.user.security_utils import get_password_hash
 
 
 def add_user(session: Session, username: str, first_name: str, last_name: str,

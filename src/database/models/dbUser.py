@@ -1,6 +1,6 @@
-from database.core import Base
+from src.database.core import Base
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String
 
 
 class DBUser(Base):

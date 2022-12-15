@@ -1,6 +1,3 @@
-# TODO: uncomment imports and parts of schemas when constraints will start to work
-from __future__ import annotations
-
 from pydantic import BaseModel
 
 
@@ -14,12 +11,12 @@ class UserBase(BaseModel):
     description: str | None
 
 
-
 class UserCreate(UserBase):
     username: str | None
     first_name: str | None
     last_name: str | None
     password: str | None
+
 
 class UserUpdate(UserBase):
     id: int
