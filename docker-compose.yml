@@ -14,8 +14,8 @@ services:
 #    environment:
     db:
       image: postgres
-      ports:
-        - "5432:5432"
+#      ports:
+#        - "5432:5432"
       environment:
         POSTGRES_PASSWORD: postgres
         POSTGRES_USER: postgres
