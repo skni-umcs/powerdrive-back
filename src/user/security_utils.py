@@ -4,8 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from src.database.connectors import userConnector
-from src.database.exceptions.userExceptions import UserNotFoundException
+from src.user import userConnector
+from src.user.userExceptions import UserNotFoundException
 
 from pydantic import BaseModel
 

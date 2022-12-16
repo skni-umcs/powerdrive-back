@@ -1,21 +1,16 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
-    id: int | None
-    username: str | None
-    password: str | None
-    email: str | None
-    first_name: str | None
-    last_name: str | None
-    description: str | None
+    username: str
+    first_name: str
+    last_name: str
+    email: EmailStr
 
 
 class UserCreate(UserBase):
-    username: str | None
-    first_name: str | None
-    last_name: str | None
-    password: str | None
+    # TODO Password with minimum 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 special character with custom validation
+    password: str
 
 
 class UserUpdate(UserBase):
@@ -24,9 +19,8 @@ class UserUpdate(UserBase):
 
 
 class User(UserBase):
-    username: str | None
-    first_name: str | None
-    last_name: str | None
+    id: int
+    hashed_password: str
 
     class Config:
         orm_mode = True

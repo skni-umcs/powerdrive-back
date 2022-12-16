@@ -3,8 +3,8 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from ..database.connectors import userConnector
-from src.database.exceptions.userExceptions import UserNotFoundException, UsernameTakenException
+from . import userConnector
+from src.user.userExceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
