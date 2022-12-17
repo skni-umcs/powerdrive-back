@@ -63,8 +63,8 @@ async def add_user(user: UserCreate, db: Session = Depends(get_db)):
 @api_router.put("/{user_id}", response_model=User)
 async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     try:
-        userConnector.update_user_by_index(db, user_id, user.username, user.first_name, user.last_name,
-                                           user.password)
+        userConnector.update_user(db, user_id, user.username, user.first_name, user.last_name,
+                                  user.password)
     except (UserNotFoundException, UsernameTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
 

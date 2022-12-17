@@ -3,16 +3,12 @@
 from src.user.userExceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
 from models import DBUser
+from src.user.schemas import UserCreate, UserUpdate
 from src.user.security_utils import get_password_hash
 
 
-def add_user(session: Session, username: str, first_name: str, last_name: str,
-             password: str, ) -> DBUser:
-    if session.query(DBUser).filter(DBUser.username == username).first():
-        raise UsernameTakenException()
-
-    user = DBUser(user_name=username, first_name=first_name,
-                  last_name=last_name, user_password=get_password_hash(password))
+def add_user(session: Session, user_in: UserCreate) -> DBUser:
+    user = DBUser(**user_in.dict())
     session.add(user)
     session.commit()
 
@@ -27,30 +23,19 @@ def get_user_by_index(session: Session, user_id: int) -> DBUser:
     return user
 
 
-def update_user_by_index(session: Session, user_id: int, username: str, first_name: str,
-                         last_name: str, password: str, ) -> None:
-    user = session.query(DBUser).filter(DBUser.user_id == user_id).first()
+def update_user(session: Session, user_update_in: UserUpdate) -> DBUser:
+    user = session.query(DBUser).filter(DBUser.user_id == user_update_in.id).first()
 
     if not user:
         raise UserNotFoundException()
 
-    user_err = session.query(DBUser).filter(DBUser.user_name == username,
-                                            DBUser.user_id != user_id).first()
-    if user_err:
-        raise UsernameTakenException()
-
-
-
-    if username:
-        user.user_name = username
-    if first_name:
-        user.first_name = first_name
-    if last_name:
-        user.last_name = last_name
-    if password:
-        user.hashed_password = get_password_hash(password)
-
+    user.user_name = user_update_in.username
+    user.first_name = user_update_in.first_name
+    user.last_name = user_update_in.last_name
+    user.password = get_password_hash(user_update_in.password)
+    user.email = user_update_in.email
     session.commit()
+    return user
 
 
 def delete_user_by_index(session: Session, user_id: int) -> None:

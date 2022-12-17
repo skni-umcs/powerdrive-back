@@ -6,11 +6,12 @@ from sqlalchemy import Column, Integer, String
 class DBUser(Base):
     __tablename__ = 'User'
 
-    user_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_name = Column(String(100))
-    user_password = Column(String(100))
-    user_email = Column(String(100))
-    user_first_name = Column(String(100))
-    user_last_name = Column(String(100))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(100), unique=True, nullable=False)
+    password = Column(String(100), nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
 
-    user_description = Column(String(100))
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+
+    # description = Column(String(100))
