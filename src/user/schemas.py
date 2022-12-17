@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ValidationError, validator
 
 
 class UserBase(BaseModel):
@@ -8,14 +8,37 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
+
 class UserCreate(UserBase):
-    # TODO Password with minimum 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 special character with custom validation
     password: str
+    @validator('password')
+    def password_must_contain_uppercase(cls, v):
+        if not any(char.isupper() for char in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        return v
+
+    @validator('password')
+    def password_must_contain_lowercase(cls, v):
+        if not any(char.islower() for char in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        return v
+
+    @validator('password')
+    def password_must_contain_digit(cls, v):
+        if not any(char.isdigit() for char in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
+
+    @validator('password')
+    def password_must_contain_special_character(cls, v):
+        if not any(not char.isalnum() for char in v):
+            raise ValueError('Password must contain at least one special character')
+        return v
 
 
-class UserUpdate(UserBase):
+
+class UserUpdate(UserCreate):
     id: int
-    password: str
 
 
 class UserInDB(UserBase):
