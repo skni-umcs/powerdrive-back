@@ -18,9 +18,16 @@ class UserUpdate(UserBase):
     password: str
 
 
-class User(UserBase):
+class UserInDB(UserBase):
     id: int
     hashed_password: str
+
+    class Config:
+        orm_mode = True
+
+
+class User(UserBase):
+    id: int
 
     class Config:
         orm_mode = True

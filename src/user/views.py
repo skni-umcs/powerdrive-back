@@ -3,15 +3,14 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from . import userConnector
 from src.user.userExceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
+import src.user.userConnector as userConnector
 from src.user.schemas import User, UserCreate, UserUpdate
-from .security_utils import get_current_user, Token, authenticate_user, create_access_token, \
+from .security_utils import Token, authenticate_user, create_access_token, \
     ACCESS_TOKEN_EXPIRE_MINUTES
-from src.dependencies import get_db
+from src.dependencies import get_db, get_current_user
 
 api_router = APIRouter(prefix="/user", tags=["user"])
 
@@ -36,7 +35,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 
 
 @api_router.get("/{user_id}", response_model=User)
-async def get_user(user_id: int, db: Session = Depends(get_db)):
+async def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
         user = userConnector.get_user_by_index(db, user_id)
     except UserNotFoundException as e:
@@ -46,25 +45,23 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @api_router.get("/", response_model=list[User])
-async def get_all_users(db: Session = Depends(get_db)):
+async def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return userConnector.get_all_users(db)
 
 
 @api_router.post("/", response_model=User)
 async def add_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
-        created_user = userConnector.add_user(db, user.username, user.first_name, user.last_name,
-                                              user.password)
+        created_user = userConnector.add_user(db, user)
     except UsernameTakenException as e:
         raise HTTPException(status_code=404, detail=str(e))
     return created_user
 
 
-@api_router.put("/{user_id}", response_model=User)
-async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+@api_router.put("/{user_id}", response_model=User, )
+async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        userConnector.update_user(db, user_id, user.username, user.first_name, user.last_name,
-                                  user.password)
+        userConnector.update_user(db, user)
     except (UserNotFoundException, UsernameTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -72,7 +69,7 @@ async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_
 
 
 @api_router.delete("/{user_id}", status_code=204)
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
+async def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
         userConnector.delete_user_by_index(db, user_id)
     except UserNotFoundException as e:

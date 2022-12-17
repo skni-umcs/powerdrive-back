@@ -2,7 +2,7 @@
 # TODO: when constraints will start to work
 from src.user.userExceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
-from models import DBUser
+from src.user.models import DBUser
 from src.user.schemas import UserCreate, UserUpdate
 from src.user.security_utils import get_password_hash
 
