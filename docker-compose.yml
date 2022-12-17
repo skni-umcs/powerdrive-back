@@ -11,7 +11,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
-#    environment:
+    environment:
+        - DB_HOST=db
+        - DB_USER=powerdrive
+        - DB_PASSWORD=powerdrive
+        - DB_NAME=powerdrive
+        - DB_PORT=5432
+        - ROOT_PATH=/
+        - APP_PORT=8123
+
   db:
     image: postgres
     ports:

@@ -10,3 +10,4 @@ class Settings(BaseSettings):
     db_name: str = "powerdrive"
     db_url: str = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     root_path: str = "/"
+    app_port: int = 8123
