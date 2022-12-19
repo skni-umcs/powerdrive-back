@@ -1,6 +1,8 @@
 import logging
 from src.database.core import create_db, check_all_tables
 from src.user.models import DBUser
+from src.group.models import DBGroup
+from src.group.models import DBGroupUser
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.info("Checking if all tables exists")
