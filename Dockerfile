@@ -9,4 +9,5 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Run the app
-CMD ["python", "main.py"]
+#CMD ["python", "main.py"]
+ENTRYPOINT ["bash", "docker_entrypoint.sh"]
