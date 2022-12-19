@@ -1,12 +1,12 @@
 from datetime import timedelta
 
-from fastapi.security import OAuth2PasswordRequestForm
+# from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from src.user.userExceptions import UserNotFoundException, UsernameTakenException
+from src.user.exceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import src.user.userConnector as userConnector
+import src.user.service as userConnector
 from src.user.schemas import User, UserCreate, UserUpdate
 # from .security_utils import Token, authenticate_user, create_access_token, \
 #     ACCESS_TOKEN_EXPIRE_MINUTES

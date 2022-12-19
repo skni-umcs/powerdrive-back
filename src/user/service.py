@@ -1,14 +1,14 @@
 # TODO: add privilege_id to function parameters and uncomment privilege in update function
 # TODO: when constraints will start to work
-from src.user.userExceptions import UserNotFoundException, UsernameTakenException
+from src.user.exceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
-from src.user.models import DBUser
+from src.user.models import User
 from src.user.schemas import UserCreate, UserUpdate
-from src.user.security_utils import get_password_hash
+from src.auth.security import get_password_hash
 
 
-def add_user(session: Session, user_in: UserCreate) -> DBUser:
-    user = DBUser(**user_in.dict(exclude={"password"}))
+def add_user(session: Session, user_in: UserCreate) -> User:
+    user = User(**user_in.dict(exclude={"password"}))
     user.password = get_password_hash(user_in.password)
     session.add(user)
     session.commit()
@@ -16,16 +16,16 @@ def add_user(session: Session, user_in: UserCreate) -> DBUser:
     return user
 
 
-def get_user_by_index(session: Session, user_id: int) -> DBUser:
-    user = session.query(DBUser).filter(DBUser.user_id == user_id).first()
+def get_user_by_index(session: Session, user_id: int) -> User:
+    user = session.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise UserNotFoundException()
 
     return user
 
 
-def update_user(session: Session, user_update_in: UserUpdate) -> DBUser:
-    user = session.query(DBUser).filter(DBUser.user_id == user_update_in.id).first()
+def update_user(session: Session, user_update_in: UserUpdate) -> User:
+    user = session.query(User).filter(User.user_id == user_update_in.id).first()
 
     if not user:
         raise UserNotFoundException()
@@ -40,7 +40,7 @@ def update_user(session: Session, user_update_in: UserUpdate) -> DBUser:
 
 
 def delete_user_by_index(session: Session, user_id: int) -> None:
-    user = session.query(DBUser).filter(DBUser.user_id == user_id).first()
+    user = session.query(User).filter(User.user_id == user_id).first()
 
     if not user:
         raise UserNotFoundException()
@@ -49,13 +49,13 @@ def delete_user_by_index(session: Session, user_id: int) -> None:
     session.commit()
 
 
-def get_all_users(session: Session, ) -> list[DBUser]:
-    users = session.query(DBUser).all()
+def get_all_users(session: Session, ) -> list[User]:
+    users = session.query(User).all()
     return users
 
 
-def get_user_by_username(session: Session, username: str) -> DBUser:
-    user = session.query(DBUser).filter(DBUser.user_name == username).first()
+def get_user_by_username(session: Session, username: str) -> User:
+    user = session.query(User).filter(User.user_name == username).first()
     if not user:
         raise UserNotFoundException()
 

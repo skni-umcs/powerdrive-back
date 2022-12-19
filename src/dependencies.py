@@ -5,7 +5,7 @@ from src.user.schemas import User
 
 from src.database.core import SessionLocal
 # from src.user.security_utils import oauth2_scheme
-import src.user.userConnector as userConnector
+import src.user.service as userConnector
 
 
 def get_db():

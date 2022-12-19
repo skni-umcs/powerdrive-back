@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from .models import TokenData
 from .exceptions import InvalidCredentialsException, InactiveUserException
 
-from src.user.service import get_by_username
+from src.user.service import get_user_by_username
 from src.user.exceptions import UserNotFoundException
 from src.user.models import User
 
@@ -31,7 +31,7 @@ def get_password_hash(password) -> str:
 
 def authenticate_user(username: str, password: str) -> User | None:
     try:
-        user = get_by_username(username)
+        user = get_user_by_username(username)
         # user = get_user(fake_db, username)
     except UserNotFoundException:
         return None
@@ -62,7 +62,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise exc
-    user = get_by_username(username=token_data.username)
+    user = get_user_by_username(username=token_data.username)
     if user is None:
         raise exc
     return user
