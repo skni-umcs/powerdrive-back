@@ -8,7 +8,8 @@ from src.user.security_utils import get_password_hash
 
 
 def add_user(session: Session, user_in: UserCreate) -> DBUser:
-    user = DBUser(**user_in.dict())
+    user = DBUser(**user_in.dict(exclude={"password"}))
+    user.password = get_password_hash(user_in.password)
     session.add(user)
     session.commit()
 
