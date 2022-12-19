@@ -17,7 +17,7 @@ def add_user(session: Session, user_in: UserCreate) -> DBUser:
 
 
 def get_user_by_index(session: Session, user_id: int) -> DBUser:
-    user = session.query(DBUser).filter(DBUser.user_id == user_id).first()
+    user = session.query(DBUser).filter(DBUser.id == user_id).first()
     if not user:
         raise UserNotFoundException()
 
