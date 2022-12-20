@@ -5,6 +5,7 @@ from src.group.models import DBGroup, DBGroupUser
 from src.group.schemas import GroupCreate, GroupUpdate, Group
 from src.user.userConnector import get_user_by_index
 from src.user.schemas import User
+from src.user.models import DBUser
 
 
 def add_group(group: GroupCreate, session: Session, owner: User) -> DBGroup:
@@ -35,6 +36,22 @@ def get_group_by_index(session: Session, group_id: int) -> DBGroup:
         raise GroupNotFoundException()
 
     return group
+
+
+def get_group_users(session: Session, group_id: int) -> list[DBUser]:
+    group = session.query(DBGroup).filter(DBGroup.group_id == group_id).first()
+
+    if not group:
+        raise GroupNotFoundException()
+
+    users = []
+    group_users = session.query(DBGroupUser).filter(group_id == group_id).all()
+    for gu in group_users:
+        u = get_user_by_index(session=session, user_id=gu.user_id)
+        if not u:
+            raise UserNotFoundException()
+        users.append(u)
+    return users
 
 
 def get_group_by_name(session: Session, group_name: str) -> DBGroup:
