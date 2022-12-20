@@ -64,12 +64,29 @@ def add_user_to_group(session: Session, group: Group, new_user: User, current_us
     if not db_new_user:
         raise UserNotFoundException()
     group_user = DBGroupUser(group_id=group.group_id, user_id=db_new_user.id)
+    session.add(group_user)
     session.commit()
     return group_user
 
 
+def delete_user_from_group(session: Session, group_id: int, user_id: int, current_user: User) -> None:
+    group = get_group_by_index(session=session, group_id=group_id)
+    if not group:
+        raise GroupNotFoundException
+    if get_user_by_index(session=session, user_id=group.group_owner_id) != get_user_by_index(session=session,
+                                                                                user_id=current_user.id):
+        raise NoGroupPermissionsException()
+    group_user = session.query(DBGroupUser).filter(DBGroupUser.group_id == group_id
+                                                   and DBGroupUser.user_id == user_id).first()
+    session.delete(group_user)
+    session.commit()
+
+
 def delete_group_by_index(session: Session, group_id: int, current_user: User) -> None:
     group = session.query(DBGroup).filter(DBGroup.group_id == group_id).first()
+    if get_user_by_index(session=session, user_id=group.owner_id) != get_user_by_index(session=session,
+                                                                                       user_id=current_user.id):
+        raise NoGroupPermissionsException()
 
     if not group:
         raise GroupNotFoundException()

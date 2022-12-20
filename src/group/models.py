@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String
 
 class DBGroupUser(Base):
     __tablename__ = 'GroupUser'
-
+    group_user_id = Column(Integer, primary_key=True, autoincrement=True)
     group_id = Column(Integer)
     user_id = Column(Integer)
 
