@@ -84,7 +84,7 @@ def delete_user_from_group(session: Session, group_id: int, user_id: int, curren
 
 def delete_group_by_index(session: Session, group_id: int, current_user: User) -> None:
     group = session.query(DBGroup).filter(DBGroup.group_id == group_id).first()
-    if get_user_by_index(session=session, user_id=group.owner_id) != get_user_by_index(session=session,
+    if get_user_by_index(session=session, user_id=group.group_owner_id) != get_user_by_index(session=session,
                                                                                        user_id=current_user.id):
         raise NoGroupPermissionsException()
 
