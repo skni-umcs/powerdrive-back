@@ -5,8 +5,8 @@ from src.group.groupExceptions import GroupNotFoundException, OwnerNotFoundExcep
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.group import groupConnector
-from src.group.groupConnector import  get_group_by_index, update_group_by_index, delete_group_by_index
-from src.group.schemas import Group, GroupCreate, GroupUpdate
+from src.group.groupConnector import get_group_by_index, update_group_by_index, delete_group_by_index
+from src.group.schemas import Group, GroupCreate, GroupUpdate, GroupUser
 from src.user.schemas import User
 from src.dependencies import get_db
 
@@ -28,18 +28,20 @@ async def add_group(group: GroupCreate, db: Session = Depends(get_db)):#, curren
         raise HTTPException(status_code=404, detail=str(e))
     return new_group
 
-@api_router.post("/", response_model=Group)
-async def add_group(group: GroupCreate, user: User, current_user: User, db: Session = Depends(get_db)):
-    #, current_user: User = Depends(get_current_user)):
+
+@api_router.post("/group/{group_id}/add_user", response_model=GroupUser)
+async def add_user_to_group(group_id: int, user: User, db: Session = Depends(get_db)):
     try:
         current_user = get_user_by_index(session=db, user_id=1)
     except OwnerNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
     try:
-        new_group = groupConnector.add_group(group=group, session=db, owner=current_user)
+        new_group_user = groupConnector.add_user_to_group(session=db,
+                                                          group=get_group_by_index(session=db, group_id=group_id),
+                                                          new_user=user, current_user=current_user)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return new_group
+    return new_group_user
 
 
 @api_router.get("/", response_model=list[Group])
@@ -73,5 +75,13 @@ async def delete_group(group_id: int, db: Session = Depends(get_db)):#, current_
     current_user = get_user_by_index(session=db, user_id=1)
     try:
         delete_group_by_index(session=db, group_id=group_id, current_user=current_user)
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@api_router.delete("/{group_id}/delete_user/{user_id}", status_code=204)
+async def delete_user_from_group(group_id: int, user_id: int, db: Session = Depends(get_db)):#, current_user: User = Depends(get_current_user)):
+    current_user = get_user_by_index(session=db, user_id=1)
+    try:
+        groupConnector.delete_user_from_group(session=db, group_id=group_id, user_id=user_id, current_user=current_user)
     except GroupNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
