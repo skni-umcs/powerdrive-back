@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.user.exceptions import UserNotFoundException, UsernameTakenException
 
 from fastapi import APIRouter, Depends, HTTPException, status
-import src.user.service as userConnector
+from src.user.service import add, get_by_index, update, delete_by_index, get_all
 from src.user.schemas import User, UserCreate, UserUpdate
 # from .security_utils import Token, authenticate_user, create_access_token, \
 #     ACCESS_TOKEN_EXPIRE_MINUTES
@@ -37,7 +37,7 @@ api_router = APIRouter(prefix="/user", tags=["user"])
 @api_router.get("/{user_id}", response_model=User)
 async def get_user(user_id: int, db: Session = Depends(get_db)):
     try:
-        user = userConnector.get_user_by_index(db, user_id)
+        user = get_by_index(db, user_id)
     except UserNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -46,13 +46,13 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
 @api_router.get("/", response_model=list[User])
 async def get_all_users(db: Session = Depends(get_db)):
-    return userConnector.get_all_users(db)
+    return get_all(db)
 
 
 @api_router.post("/", response_model=User)
 async def add_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
-        created_user = userConnector.add_user(db, user)
+        created_user = add(db, user)
     except UsernameTakenException as e:
         raise HTTPException(status_code=404, detail=str(e))
     return created_user
@@ -61,7 +61,7 @@ async def add_user(user: UserCreate, db: Session = Depends(get_db)):
 @api_router.put("/{user_id}", response_model=User, )
 async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     try:
-        userConnector.update_user(db, user)
+        update(db, user)
     except (UserNotFoundException, UsernameTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -71,6 +71,6 @@ async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_
 @api_router.delete("/{user_id}", status_code=204)
 async def delete_user(user_id: int, db: Session = Depends(get_db)):
     try:
-        userConnector.delete_user_by_index(db, user_id)
+        delete_by_index(db, user_id)
     except UserNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))

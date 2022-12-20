@@ -8,9 +8,9 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
-
 class UserCreate(UserBase):
     password: str
+
     @validator('password')
     def password_must_contain_uppercase(cls, v):
         if not any(char.isupper() for char in v):
@@ -34,7 +34,6 @@ class UserCreate(UserBase):
         if not any(not char.isalnum() for char in v):
             raise ValueError('Password must contain at least one special character')
         return v
-
 
 
 class UserUpdate(UserCreate):

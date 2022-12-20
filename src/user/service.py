@@ -4,10 +4,10 @@ from src.user.exceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
 from src.user.models import User
 from src.user.schemas import UserCreate, UserUpdate
-from src.auth.security import get_password_hash
+from src.user.models import get_password_hash
 
 
-def add_user(session: Session, user_in: UserCreate) -> User:
+def add(session: Session, user_in: UserCreate) -> User:
     user = User(**user_in.dict(exclude={"password"}))
     user.password = get_password_hash(user_in.password)
     session.add(user)
@@ -16,7 +16,7 @@ def add_user(session: Session, user_in: UserCreate) -> User:
     return user
 
 
-def get_user_by_index(session: Session, user_id: int) -> User:
+def get_by_index(session: Session, user_id: int) -> User:
     user = session.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise UserNotFoundException()
@@ -24,13 +24,13 @@ def get_user_by_index(session: Session, user_id: int) -> User:
     return user
 
 
-def update_user(session: Session, user_update_in: UserUpdate) -> User:
-    user = session.query(User).filter(User.user_id == user_update_in.id).first()
+def update(session: Session, user_update_in: UserUpdate) -> User:
+    user = session.query(User).filter(User.id == user_update_in.id).first()
 
     if not user:
         raise UserNotFoundException()
 
-    user.user_name = user_update_in.username
+    user.username = user_update_in.username
     user.first_name = user_update_in.first_name
     user.last_name = user_update_in.last_name
     user.password = get_password_hash(user_update_in.password)
@@ -39,8 +39,8 @@ def update_user(session: Session, user_update_in: UserUpdate) -> User:
     return user
 
 
-def delete_user_by_index(session: Session, user_id: int) -> None:
-    user = session.query(User).filter(User.user_id == user_id).first()
+def delete_by_index(session: Session, user_id: int) -> None:
+    user = session.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise UserNotFoundException()
@@ -49,13 +49,13 @@ def delete_user_by_index(session: Session, user_id: int) -> None:
     session.commit()
 
 
-def get_all_users(session: Session, ) -> list[User]:
+def get_all(session: Session, ) -> list[User]:
     users = session.query(User).all()
     return users
 
 
-def get_user_by_username(session: Session, username: str) -> User:
-    user = session.query(User).filter(User.user_name == username).first()
+def get_by_username(session: Session, username: str) -> User:
+    user = session.query(User).filter(User.username == username).first()
     if not user:
         raise UserNotFoundException()
 

@@ -3,17 +3,18 @@ from datetime import datetime, timedelta
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from .models import TokenData
 from .exceptions import InvalidCredentialsException, InactiveUserException
 
-from src.user.service import get_user_by_username
+from src.user.service import get_by_username
 from src.user.exceptions import UserNotFoundException
 from src.user.models import User
+from src.user.models import verify_password, get_password_hash
 
+from src.dependencies import get_db
+from sqlalchemy.orm import Session
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = "de50745a703fbb62285736c1038ac45434f8ec90f20233c2586c22590e628d15"  # openssl rand -hex 32
 ALGORITHM = "HS256"
@@ -21,17 +22,10 @@ ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")  # placeholder for a real url
 
 
-def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password) -> str:
-    return pwd_context.hash(password)
-
-
 def authenticate_user(username: str, password: str) -> User | None:
     try:
-        user = get_user_by_username(username)
+        db: Session = get_db()
+        user = get_by_username(username)
         # user = get_user(fake_db, username)
     except UserNotFoundException:
         return None
@@ -62,7 +56,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise exc
-    user = get_user_by_username(username=token_data.username)
+    user = get_by_username(username=token_data.username)
     if user is None:
         raise exc
     return user

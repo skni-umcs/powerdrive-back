@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5433/powerdrive</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="powerdrive@localhost [2]" uuid="9c5fe941-f139-4ef6-8611-52cf30700d9c">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5433/powerdrive</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
