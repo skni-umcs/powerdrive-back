@@ -56,6 +56,11 @@ async def get_group(group_id: int, db: Session = Depends(get_db)):
     return group
 
 
+@api_router.get("/{group_id}/users", response_model=list[User])
+async def get_group_users(group_id: int, db: Session = Depends(get_db)):
+    return groupConnector.get_group_users(session=db, group_id=group_id)
+
+
 @api_router.put("/{group_id}", response_model=Group)
 async def update_group(incoming_group: GroupUpdate, current_user: User, db: Session = Depends(get_db)):
     db_current_user = get_user_by_index(session=db, user_id=current_user.id)
