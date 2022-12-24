@@ -7,7 +7,7 @@ python setup.py
 
 if [ "$TYPE" = "dev" ]; then
     echo "Running in development mode"
-    uvicorn src.rest:app --reload --host 0.0.0.0 --port "$PORT"
+    uvicorn src.api:app --reload --host 0.0.0.0 --port "$PORT"
 elif [ "$TYPE" = test ] || [ "$TYPE" = pytest ]; then
     echo "Running in test mode"
     pytest
