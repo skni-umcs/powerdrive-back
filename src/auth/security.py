@@ -25,7 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")  # placeholder for a
 def authenticate_user(username: str, password: str) -> User | None:
     try:
         db: Session = get_db()
-        user = get_by_username(username)
+        user = get_by_username(db, username)
         # user = get_user(fake_db, username)
     except UserNotFoundException:
         return None
