@@ -3,14 +3,17 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "PowerDrive"
+    root_path: str = "/"
+
     db_host: str = "db"
     db_port: str = "5432"
     db_user: str = "powerdrive"
     db_password: str = "powerdrive"
     db_name: str = "powerdrive"
-    test_db_name: str = "powerdrive_test"
 
-    db_url: str = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    test_db_url: str = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{test_db_name}"
 
-    root_path: str = "/"
+    @property
+    def db_url(self):
+        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+    class Config:
+        pass
