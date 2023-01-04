@@ -42,7 +42,7 @@ class UserUpdate(UserCreate):
 
 class UserInDB(UserBase):
     id: int
-    hashed_password: str
+    password: str
 
     class Config:
         orm_mode = True
