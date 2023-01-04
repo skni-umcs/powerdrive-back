@@ -12,7 +12,8 @@ elif [ "$TYPE" = test ] || [ "$TYPE" = pytest ]; then
     echo "Running in test mode"
     pytest
 elif [ "$TYPE" = "prod" ]; then
-    echo "Running in production mode"
-    gunicorn --workers 4 -k uvicorn.workers.UvicornWorker rest.rest:app --bind 0.0.0.0:"$PORT"
+    echo "What do you mean production mode XD"
+#    echo "Running in production mode"
+#    gunicorn --workers 4 -k uvicorn.workers.UvicornWorker src.api:app --bind 0.0.0.0:"$PORT"
 fi
 #python main.py
