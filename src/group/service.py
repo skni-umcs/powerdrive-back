@@ -3,7 +3,7 @@ from src.group.exceptions import GroupNotFoundException, OwnerNotFoundException,
 from sqlalchemy.orm import Session
 from src.group.models import DBGroup, DBGroupUser
 from src.group.schemas import GroupCreate, GroupUpdate, Group
-from src.user.userConnector import get_user_by_index
+from src.user.service import get_by_index
 from src.user.schemas import User
 from src.user.models import DBUser
 
@@ -12,7 +12,7 @@ def add_group(group: GroupCreate, session: Session, owner: User) -> DBGroup:
 
     if get_group_by_name(session=session, group_name=group.group_name):
         raise GroupNameAlreadyExistsException()
-    db_owner = get_user_by_index(session=session, user_id=1)
+    db_owner = get_by_index(session=session, user_id=1)
     if not owner:
         raise OwnerNotFoundException()
 
@@ -47,7 +47,7 @@ def get_group_users(session: Session, group_id: int) -> list[DBUser]:
     users = []
     group_users = session.query(DBGroupUser).filter(group_id == group_id).all()
     for gu in group_users:
-        u = get_user_by_index(session=session, user_id=gu.user_id)
+        u = get_by_index(session=session, user_id=gu.user_id)
         if not u:
             raise UserNotFoundException()
         users.append(u)
@@ -73,11 +73,11 @@ def update_group_by_index(session: Session, incoming_group: GroupUpdate, current
 
 
 def add_user_to_group(session: Session, group: Group, new_user: User, current_user: User) -> DBGroupUser:
-    if get_user_by_index(session=session, user_id=group.group_owner_id) != get_user_by_index(session=session,
+    if get_by_index(session=session, user_id=group.group_owner_id) != get_by_index(session=session,
                                                                                              user_id=current_user.id):
         raise NoGroupPermissionsException()
 
-    db_new_user = get_user_by_index(session=session, user_id=new_user.id)
+    db_new_user = get_by_index(session=session, user_id=new_user.id)
     if not db_new_user:
         raise UserNotFoundException()
     group_user = DBGroupUser(group_id=group.group_id, user_id=db_new_user.id)
@@ -90,8 +90,8 @@ def delete_user_from_group(session: Session, group_id: int, user_id: int, curren
     group = get_group_by_index(session=session, group_id=group_id)
     if not group:
         raise GroupNotFoundException
-    if get_user_by_index(session=session, user_id=group.group_owner_id) != get_user_by_index(session=session,
-                                                                                user_id=current_user.id):
+    if get_by_index(session=session, user_id=group.group_owner_id) != get_by_index(session=session,
+                                                                                   user_id=current_user.id):
         raise NoGroupPermissionsException()
     group_user = session.query(DBGroupUser).filter(DBGroupUser.group_id == group_id
                                                    and DBGroupUser.user_id == user_id).first()
@@ -101,7 +101,7 @@ def delete_user_from_group(session: Session, group_id: int, user_id: int, curren
 
 def delete_group_by_index(session: Session, group_id: int, current_user: User) -> None:
     group = session.query(DBGroup).filter(DBGroup.group_id == group_id).first()
-    if get_user_by_index(session=session, user_id=group.group_owner_id) != get_user_by_index(session=session,
+    if get_by_index(session=session, user_id=group.group_owner_id) != get_by_index(session=session,
                                                                                        user_id=current_user.id):
         raise NoGroupPermissionsException()
 
