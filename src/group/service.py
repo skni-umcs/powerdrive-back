@@ -1,4 +1,4 @@
-from src.group.groupExceptions import GroupNotFoundException, OwnerNotFoundException, \
+from src.group.exceptions import GroupNotFoundException, OwnerNotFoundException, \
     GroupNameAlreadyExistsException, UserNotFoundException, NoGroupPermissionsException
 from sqlalchemy.orm import Session
 from src.group.models import DBGroup, DBGroupUser
