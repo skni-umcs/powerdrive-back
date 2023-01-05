@@ -11,6 +11,7 @@ from src.database.core import create_db, check_all_tables
 settings = Settings()
 
 from src.user.models import User
+from src.files.models import dbFileMetadata
 
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,18 +52,27 @@ def _create_all_tables_if_needed():
         logger.info("All tables exists. Nothing to do")
 
 
+def _create_admin():
+    logger.warning("_create_admin NOT IMPLEMENTED")
+
+
+def _create_root_dir_for_files():
+    if settings.base_file_path:
+        logger.info(f"Creating root dir {settings.base_file_path}")
+        import os
+        os.makedirs(settings.base_file_path, exist_ok=True)
+
+
 def setup_test():
     _create_test_database()
     _create_all_tables_if_needed()
-
-
-def _create_admin():
-    logger.warning("_create_admin NOT IMPLEMENTED")
+    _create_root_dir_for_files()
 
 
 def setup_dev():
     _create_all_tables_if_needed()
     _create_admin()
+    _create_root_dir_for_files()
 
 
 def setup_prod():

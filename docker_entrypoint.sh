@@ -26,5 +26,10 @@ elif [ "$TYPE" = "prod" ]; then
     echo -e "${BRED}What do you mean production mode XD${NC}"
 #    echo "Running in production mode"
 #    gunicorn --workers 4 -k uvicorn.workers.UvicornWorker src.api:app --bind 0.0.0.0:"$PORT"
+
+elif [ "$TYPE" = "drop_db" ]; then
+    echo -e "${BRED}Dropping database...${NC}"
+    python cmd_utils.py drop_db
+
 fi
 #python main.py

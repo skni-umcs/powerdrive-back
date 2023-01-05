@@ -11,9 +11,11 @@ class Settings(BaseSettings):
     db_password: str = "powerdrive"
     db_name: str = "powerdrive"
 
+    base_file_path: str = "/files/"
 
     @property
     def db_url(self):
         return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+
     class Config:
         pass
