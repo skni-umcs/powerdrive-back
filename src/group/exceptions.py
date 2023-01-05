@@ -23,6 +23,6 @@ class UserNotFoundException(Exception):
 
 
 class NoGroupPermissionsException(Exception):
-    def __init__(self, message="No group premission"):
+    def __init__(self, message="No group permission"):
         self.message = message
         super().__init__(self.message)

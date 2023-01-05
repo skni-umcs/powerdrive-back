@@ -17,5 +17,3 @@ class DBGroup(Base):
     group_name = Column(String(100))
     group_description = Column(String(100))
     group_owner_id = Column(Integer)
-    #group_owner = relationship('DBUser')
-    #group_users = relationship('DBUser', secondary=DBGroupUser.__table__)
