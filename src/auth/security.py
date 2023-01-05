@@ -9,7 +9,7 @@ from .exceptions import InvalidCredentialsException, InactiveUserException
 
 from src.user.service import get_by_username
 from src.user.exceptions import UserNotFoundException
-from src.user.models import User
+from src.user.models import DBUser
 from src.user.models import verify_password, get_password_hash
 
 from src.dependencies import get_db
@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")  # placeholder for a real url
 
 
-def authenticate_user(username: str, password: str) -> User | None:
+def authenticate_user(username: str, password: str) -> DBUser | None:
     try:
         db: Session = get_db()
         user = get_by_username(db, username)
@@ -46,7 +46,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> DBUser | None:
     exc = InvalidCredentialsException(headers={"WWW-Authenticate": "Bearer"})
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -62,7 +62,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
-async def get_active_user(current_user: User = Depends(get_current_user)):
+async def get_active_user(current_user: DBUser = Depends(get_current_user)):
     if current_user is None:
         raise InactiveUserException()
     return current_user
