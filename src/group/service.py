@@ -12,7 +12,7 @@ def add_group(group: GroupCreate, session: Session, owner: User) -> DBGroup:
 
     if get_group_by_name(session=session, group_name=group.group_name):
         raise GroupNameAlreadyExistsException()
-    db_owner = get_by_index(session=session, user_id=1)
+    db_owner = get_by_index(session=session, user_id=owner.id)
     if not owner:
         raise OwnerNotFoundException()
 
