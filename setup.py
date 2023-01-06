@@ -5,13 +5,14 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import sql
 from src.config import Settings
 from src.database.core import create_db, check_all_tables, create_test_db
-# from
 
 settings = Settings()
 
+# FOR DATABASE CREATION
 from src.user.models import User
 
 logging.basicConfig(level=logging.INFO)
+
 
 def setup_test():
     # create new database
@@ -39,10 +40,6 @@ def setup_test():
 
     logging.info(settings.test_db_name)
     logging.info(settings.db_name)
-
-
-
-
 
 
 def setup_dev():
