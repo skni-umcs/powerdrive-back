@@ -4,67 +4,80 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import sql
 from src.config import Settings
-from src.database.core import create_db, check_all_tables, create_test_db
+from src.database.core import create_db, check_all_tables
+
+# from
 
 settings = Settings()
 
-# FOR DATABASE CREATION
 from src.user.models import User
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+def _create_test_database():
+    if "test" not in settings.db_name:
+        logging.error("You are not in test database, please set DB_NAME to *test* in docker_entrypoint.sh or .env")
+        sys.exit(1)
+
+    logger.info("Creating test database")
+    try:
+        conn = psycopg2.connect(
+            host=settings.db_host,
+            port=settings.db_port,
+            user=settings.db_user,
+            password=settings.db_password,
+        )
+
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+
+        with conn.cursor() as cursor:
+            cursor.execute(sql.SQL(f'DROP DATABASE IF EXISTS {settings.db_name}'))
+            cursor.execute(sql.SQL(f'CREATE DATABASE {settings.db_name}'))
+
+    finally:
+        if conn:
+            conn.close()
+
+
+def _create_all_tables_if_needed():
+    if not all(check_all_tables()):
+        logger.info("Creating tables")
+        create_db()
+        logger.info("All tables created")
+    else:
+        logger.info("All tables exists. Nothing to do")
 
 
 def setup_test():
-    # create new database
-    logging.info("Creating test database")
-    conn = psycopg2.connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
-    cursor.execute(sql.SQL(f'DROP DATABASE IF EXISTS {settings.test_db_name}'))
-    cursor.execute(sql.SQL(f'CREATE DATABASE {settings.test_db_name}'))
-    # conn.commit()
-    cursor.close()
-    conn.close()
+    _create_test_database()
+    _create_all_tables_if_needed()
 
-    logging.info("Test database created")
 
-    # create tables
-    # check_all_tables()
-    logging.info("Creating tables")
-    create_test_db()
-
-    logging.info(settings.test_db_name)
-    logging.info(settings.db_name)
+def _create_admin():
+    logger.warning("_create_admin NOT IMPLEMENTED")
 
 
 def setup_dev():
-    logging.info("Checking if all tables exists")
-    logging.info(check_all_tables())
-
-    if not all(check_all_tables()):
-        logging.info("Creating tables")
-        create_db()
-        logging.info("All tables created")
-    else:
-        logging.info("All tables exists")
-        logging.info("Nothing to do")
+    _create_all_tables_if_needed()
+    _create_admin()
 
 
 def setup_prod():
-    logging.warning("NOT IMPLEMENTED")
+    logger.warning("setup_prod NOT IMPLEMENTED")
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "test":
-        setup_test()
-    elif sys.argv[1] == "dev":
-        setup_dev()
-    elif sys.argv[1] == "prod":
-        setup_prod()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "test":
+            setup_test()
+        elif sys.argv[1] == "dev":
+            setup_dev()
+        elif sys.argv[1] == "prod":
+            setup_prod()
+        else:
+            print("Invalid argument")
     else:
-        print("Invalid argument")
+        print("Missing argument")
