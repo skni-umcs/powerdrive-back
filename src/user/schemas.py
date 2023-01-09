@@ -43,6 +43,7 @@ class UserUpdate(UserCreate):
 class UserInDB(UserBase):
     id: int
     hashed_password: str
+    if_admin: bool
 
     class Config:
         orm_mode = True
@@ -50,6 +51,7 @@ class UserInDB(UserBase):
 
 class User(UserBase):
     id: int
+    if_admin: bool
 
     class Config:
         orm_mode = True
