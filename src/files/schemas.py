@@ -5,6 +5,7 @@ import json
 class FileMetadataBase(BaseModel):
     filename: str
     path: str
+    is_dir: bool
 
     # type: str
     # size: int
@@ -25,13 +26,6 @@ class FileMetadataBase(BaseModel):
         if not v.endswith(values['filename']):
             raise ValueError('Filename must be in path')
         return v
-    #
-    # @validator('size')
-    # # @classmethod
-    # def check_size(cls, v):
-    #     if v < 0:
-    #         raise ValueError('Size must be positive')
-    #     return v
 
 
 class FileMetadataCreate(FileMetadataBase):
@@ -65,7 +59,9 @@ class FileMetadataInDB(FileMetadataBase):
 
 class FileMetadata(FileMetadataBase):
     id: int
-    type: str
+    # type: str
+    size: int
+    is_deleted: bool
 
     class Config:
         orm_mode = True

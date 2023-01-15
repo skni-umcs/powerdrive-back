@@ -3,6 +3,7 @@ from src.user.views import api_router as user_router
 from src.auth.views import api_router as auth_router
 from src.admin.views import api_router as admin_router
 from src.files.views import api_router as file_router
+from src.files.views_files import api_router as file_router
 
 app = FastAPI()
 app.include_router(user_router)
