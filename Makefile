@@ -4,6 +4,7 @@ DB_CONTAINER := "db"
 SERVER_CONTAINER := $(PROJECT_NAME)-$(MAIN_CONTAINER)
 
 all: clear build up
+	lazydocker
 
 #docker up:
 up:
@@ -26,9 +27,12 @@ bash_db:
 	docker compose exec $(DB_CONTAINER) bash
 
 clear:
+	docker compose down --rmi local --volumes --remove-orphans
+
+clear_all:
 	docker compose down --rmi all --volumes --remove-orphans
-	docker image rm $(SERVER_CONTAINER):latest
 
 drop_db:
 	docker compose down
-	docker compose run --rm $(MAIN_CONTAINER) drop_db
+
+	sudo rm -rf ./db_data

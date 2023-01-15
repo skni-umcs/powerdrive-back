@@ -4,6 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
+    #      args:
+    #        - UID="1002"
+    #        - GID="1002"
+    ##        - "UID=${UID:-1000}"
+    #        - "GID=${GID:-1000}"
     ports:
       - "8123:8000"
     volumes:
@@ -27,10 +32,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    environment:
-      ADMINER_DEFAULT_SERVER: db
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8080:8080
+#    environment:
+#      ADMINER_DEFAULT_SERVER: db
