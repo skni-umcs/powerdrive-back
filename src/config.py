@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     db_password: str = "powerdrive"
     db_name: str = "powerdrive"
 
-    base_file_path: str = "/files/"
-    base_file_path_trash: str = "/files/trash/"
+    base_file_path: str = "/app/files/"
+
+    main_dir_name: str = "main"
+    trash_dir_name: str = "trash"
 
     @property
     def db_url(self):

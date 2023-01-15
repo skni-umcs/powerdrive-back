@@ -26,8 +26,10 @@ bash:
 bash_db:
 	docker compose exec $(DB_CONTAINER) bash
 
-clear:
+clear: drop_db
 	docker compose down --rmi local --volumes --remove-orphans
+	sudo rm -rf files
+
 
 clear_all:
 	docker compose down --rmi all --volumes --remove-orphans
