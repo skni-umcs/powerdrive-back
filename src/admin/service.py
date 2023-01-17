@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from src.user.models import User
-from src.user.service import get_by_index
 from src.admin.exceptions import UserNotFoundException
 
 
@@ -31,7 +30,4 @@ def tmp(if_admin):
 def get_all_admins(session: Session) -> list[User]:
     admins = session.query(User).filter(User.if_admin).all()
     return admins
-
-
-
 
