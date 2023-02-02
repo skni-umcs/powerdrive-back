@@ -3,9 +3,9 @@ import json
 
 
 class FileMetadataBase(BaseModel):
-    filename: str
-    path: str
-    is_dir: bool
+    filename: str  # name of file
+    path: str  # path to file with file name
+    is_dir: bool = False  # is file directory?
 
     # type: str
     # size: int
@@ -23,6 +23,7 @@ class FileMetadataBase(BaseModel):
     @validator('path')
     # @classmethod
     def check_path_and_filename(cls, v, values, **kwargs):
+        # if not values['is_dir'] and not v.endswith(values['filename']):
         if not v.endswith(values['filename']):
             raise ValueError('Filename must be in path')
         return v
@@ -31,10 +32,12 @@ class FileMetadataBase(BaseModel):
 class FileMetadataCreate(FileMetadataBase):
     pass
 
+    # don try change this:
     @classmethod
     def __get_validators__(cls):
         yield cls.validate_to_json
 
+    # don try change this:
     @classmethod
     def validate_to_json(cls, value):
         if isinstance(value, str):
@@ -61,7 +64,7 @@ class FileMetadata(FileMetadataBase):
     id: int
     # type: str
     size: int
-    is_deleted: bool
+    is_deleted: bool = False
 
     class Config:
         orm_mode = True
