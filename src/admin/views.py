@@ -12,7 +12,7 @@ def is_current_admin(user: User = Depends(get_current_user)):
     if user.if_admin:
         return user
     else:
-        raise UserNotAdminException()
+        raise HTTPException(status_code=404, detail=str(UserNotAdminException))
 
 
 @api_router.post("/{user_id}", response_model=User)
