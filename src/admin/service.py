@@ -21,12 +21,6 @@ def delete_admin(session: Session, user_id: int) -> User:
     return user
 
 
-def tmp(if_admin):
-    if if_admin:
-        return 1
-    return 0
-
-
 def get_all_admins(session: Session) -> list[User]:
     admins = session.query(User).filter(User.if_admin).all()
     return admins
