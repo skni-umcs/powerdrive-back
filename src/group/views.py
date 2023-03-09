@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from src.group.exceptions import GroupNotFoundException, OwnerNotFoundException
 from fastapi import APIRouter, Depends, HTTPException
-
 from src.group import service
 from src.group.schemas import Group, GroupCreate, GroupUpdate, GroupUser
 from src.user.schemas import User

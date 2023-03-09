@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from src.group.models import DBGroup, DBGroupUser
 from src.group.schemas import GroupCreate, GroupUpdate, Group
 from src.user.service import get_by_index
-# from src.user.schemas import User
 from src.user.models import User
 
 
