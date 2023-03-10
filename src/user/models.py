@@ -1,7 +1,7 @@
 from src.database.core import Base
 from passlib.context import CryptContext
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,5 +25,5 @@ class User(Base):
 
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-
+    if_admin = Column(Boolean, default=False)
     # description = Column(String(100))

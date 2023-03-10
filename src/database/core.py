@@ -25,3 +25,12 @@ def create_db():
     session = SessionLocal()
     session.commit()
     session.close()
+
+
+# def create_test_db():
+#     test_engine = create_engine(sett.db_url)
+#     Base.metadata.create_all(bind=test_engine)
+#     testmaker = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+#     session = testmaker()
+#     session.commit()
+#     session.close()

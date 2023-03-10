@@ -11,3 +11,4 @@ COPY . .
 # Run the app
 #CMD ["python", "main.py"]
 ENTRYPOINT ["bash", "docker_entrypoint.sh"]
+CMD ["dev"]
