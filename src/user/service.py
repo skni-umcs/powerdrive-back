@@ -2,13 +2,13 @@
 # TODO: when constraints will start to work
 from src.user.exceptions import UserNotFoundException, UsernameTakenException
 from sqlalchemy.orm import Session
-from src.user.models import User
+from src.user.models import DBUser
 from src.user.schemas import UserCreate, UserUpdate
 from src.user.models import get_password_hash
 
 
-def add(session: Session, user_in: UserCreate) -> User:
-    user = User(**user_in.dict(exclude={"password"}))
+def add(session: Session, user_in: UserCreate) -> DBUser:
+    user = DBUser(**user_in.dict(exclude={"password"}))
     user.password = get_password_hash(user_in.password)
     session.add(user)
     session.commit()
@@ -16,16 +16,16 @@ def add(session: Session, user_in: UserCreate) -> User:
     return user
 
 
-def get_by_index(session: Session, user_id: int) -> User:
-    user = session.query(User).filter(User.id == user_id).first()
+def get_by_index(session: Session, user_id: int) -> DBUser:
+    user = session.query(DBUser).filter(DBUser.id == user_id).first()
     if not user:
         raise UserNotFoundException()
 
     return user
 
 
-def update(session: Session, user_update_in: UserUpdate) -> User:
-    user = session.query(User).filter(User.id == user_update_in.id).first()
+def update(session: Session, user_update_in: UserUpdate) -> DBUser:
+    user = session.query(DBUser).filter(DBUser.id == user_update_in.id).first()
 
     if not user:
         raise UserNotFoundException()
@@ -40,7 +40,7 @@ def update(session: Session, user_update_in: UserUpdate) -> User:
 
 
 def delete_by_index(session: Session, user_id: int) -> None:
-    user = session.query(User).filter(User.id == user_id).first()
+    user = session.query(DBUser).filter(DBUser.id == user_id).first()
 
     if not user:
         raise UserNotFoundException()
@@ -49,13 +49,13 @@ def delete_by_index(session: Session, user_id: int) -> None:
     session.commit()
 
 
-def get_all(session: Session, ) -> list[User]:
-    users = session.query(User).all()
+def get_all(session: Session, ) -> list[DBUser]:
+    users = session.query(DBUser).all()
     return users
 
 
-def get_by_username(session: Session, username: str) -> User:
-    user = session.query(User).filter(User.username == username).first()
+def get_by_username(session: Session, username: str) -> DBUser:
+    user = session.query(DBUser).filter(DBUser.username == username).first()
     if not user:
         raise UserNotFoundException()
 
