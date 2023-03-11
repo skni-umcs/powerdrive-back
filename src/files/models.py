@@ -1,6 +1,6 @@
 from src.database.core import Base
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 
 
 class DbFileMetadata(Base):
@@ -24,3 +24,5 @@ class DbFileMetadata(Base):
     is_dir = Column(Boolean, default=False)
 
     parent_id = Column(Integer, ForeignKey('pd_file.id'))
+
+    last_modified = Column(DateTime, nullable=False)

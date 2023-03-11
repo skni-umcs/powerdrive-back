@@ -1,9 +1,9 @@
-from src.files.service import add_file, get_by_index, update, delete_by_index, get_all, _save_file
-from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate
-from fastapi import UploadFile
+# from src.files.service import add_file, get_by_index, update, delete_by_index, get_all, _save_file
+# from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate
+# from fastapi import UploadFile
 # from starlette.datastructures import
-from src.dependencies import get_db
-import os
+# from src.dependencies import get_db
+# import os
 # class TestFilesDBServicesTest:
 #     """Test the files database services."""
 #     db = get_db()

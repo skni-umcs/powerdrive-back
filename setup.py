@@ -90,14 +90,14 @@ def _create_root_dir_for_files():
 def setup_test():
     _create_test_database()
     _create_all_tables_if_needed()
-    _create_root_dir_for_files()
+    # _create_root_dir_for_files()
 
 
 def setup_dev():
     _create_all_tables_if_needed()
     _create_admin()
     _insert_initial_data()
-    _create_root_dir_for_files()
+    # _create_root_dir_for_files()
 
 
 def setup_prod():

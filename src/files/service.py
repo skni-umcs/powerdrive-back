@@ -1,5 +1,5 @@
 import shutil
-
+from datetime import datetime
 from pydantic import ValidationError
 
 from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException, DirException
@@ -8,7 +8,7 @@ from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
     check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, check_if_proper_dir_path
 
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from src.config import Settings
 
@@ -29,26 +29,27 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
     :param owner_id: id of user
     :return: None
     """
-    print(path)
+    # print(path)
     dir_list = path.split("/")[1:]
 
     previous_dir = get_and_creat_root_dir(db, owner_id)
-    path = "/"
+    path = ""
 
     for directory in dir_list:
-        path += directory
-        print(path)
-        if check_if_file_exists_in_db(db, path, owner_id) and check_if_proper_dir_path(path):
+        path += "/" + directory
+        name = directory
+
+        if check_if_file_exists_in_db(db, path, owner_id):
             continue
-        print(path.rsplit("/", 1))
-        dir_metadata = DbFileMetadata(filename=path, path=path, type="directory", owner_id=owner_id,
+
+        dir_metadata = DbFileMetadata(filename=name, path=path, type="directory", owner_id=owner_id,
                                       size=0, is_dir=True,
                                       parent_id=previous_dir.id)
         db.add(dir_metadata)
         db.commit()
 
         previous_dir = dir_metadata
-        path += "/"
+
 
 
 def save_file_to_db(db: Session, file_metadata_create: FileMetadataCreate, owner_id: int,
@@ -65,10 +66,10 @@ def save_file_to_db(db: Session, file_metadata_create: FileMetadataCreate, owner
 
     # print(file_metadata_create.path.rsplit("/", 1)[0])
     parent_dir = db.query(DbFileMetadata).filter(
-        DbFileMetadata.path == file_metadata_create.path.rsplit("/", 1)[0] + '/',
+        DbFileMetadata.path == file_metadata_create.path.rsplit("/", 1)[0],
         DbFileMetadata.owner_id == owner_id).first()
     db_file = DbFileMetadata(**file_metadata_create.dict(), type=file_type, size=size, owner_id=owner_id,
-                             parent_id=parent_dir.id)
+                             parent_id=parent_dir.id, last_modified=datetime.now())
 
     db.add(db_file)
     db.commit()
@@ -76,7 +77,7 @@ def save_file_to_db(db: Session, file_metadata_create: FileMetadataCreate, owner
     return db_file
 
 
-def add_new_file_and_save_od_disk(db: Session, file_metadata_create: FileMetadataCreate, file_data: UploadFile | None,
+def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadataCreate, file_data: UploadFile | None,
                                   owner_id: int) -> DbFileMetadata:
     """
     Add new file to db and save it to disk
@@ -87,7 +88,7 @@ def add_new_file_and_save_od_disk(db: Session, file_metadata_create: FileMetadat
     :return: DbFileMetadata object of new file
     """
     if file_data is None and not file_metadata_create.is_dir:
-        raise ValidationError("File data is required")
+        raise HTTPException(status_code=409, detail="File data is None")
 
     if file_metadata_create.is_dir:
         create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
@@ -134,7 +135,7 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     return file_metadata
 
 
-def move_file_to_trash(path, owner_id):
+def move_file_to_trash(path, owner_id) -> None:
     """
     Move file to trash
     :param path: path to file
@@ -146,7 +147,9 @@ def move_file_to_trash(path, owner_id):
     if not os.path.exists(trash_dir):
         os.mkdir(trash_dir)
 
-    shutil.move(get_path_for_file(owner_id, path), trash_dir)
+    full_trash_path = trash_dir + path.rsplit("/", 1)[1]
+
+    shutil.move(get_path_for_file(owner_id, path), full_trash_path)
 
 
 def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
@@ -159,7 +162,11 @@ def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileM
     """
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
-                                           DbFileMetadata.owner_id == owner_id).all()
+                                           DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False).all()
+
+
+# def get_ch
 
 
 def delete_file_by_id(db: Session, file_id: int, owner_id: int):
@@ -177,12 +184,13 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
         for child in children:
             delete_file_by_id(db, child.id, owner_id)
 
-    move_file_to_trash(file_metadata.path, owner_id=owner_id)
+    if not file_metadata.is_root_dir:
+        move_file_to_trash(file_metadata.path, owner_id=owner_id)
+        file_metadata.is_deleted = True
+        file_metadata.last_modified = datetime.now()
+        db.commit()
 
-    file_metadata.is_deleted = True
-
-    db.commit()
-    db.refresh(file_metadata)
+    # db.refresh(file_metadata)
     # return file_metadata
 
 
@@ -232,6 +240,7 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
     if file_metadata_update.filename:
         file_metadata.filename = file_metadata_update.filename
 
+    file_metadata.last_modified = datetime.now()
     db.commit()
     db.refresh(file_metadata)
     return file_metadata
@@ -265,7 +274,7 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
     return file_metadata
 
 
-def get_file_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
+def get_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
     """
     Get children files of file
     :param db: SQLAlchemy session

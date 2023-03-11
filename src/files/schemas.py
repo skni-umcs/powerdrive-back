@@ -53,7 +53,7 @@ class FileMetadataInDB(FileMetadataBase):
     id: int
     path: str
     type: str
-    # is_deleted: bool
+    is_deleted: bool
     user_id: int
 
     class Config:
@@ -62,9 +62,10 @@ class FileMetadataInDB(FileMetadataBase):
 
 class FileMetadata(FileMetadataBase):
     id: int
-    # type: str
+    type: str
     size: int
-    is_deleted: bool = False
+
+    # is_deleted: bool = False
 
     class Config:
         orm_mode = True

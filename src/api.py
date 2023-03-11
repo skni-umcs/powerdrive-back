@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.user.views import api_router as user_router
-from src.files.views_files import api_router as file_router
+from src.files.views import api_router as file_router
 
 app = FastAPI()
 app.include_router(user_router)
