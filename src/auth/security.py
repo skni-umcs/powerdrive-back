@@ -66,3 +66,4 @@ async def get_active_user(current_user: User = Depends(get_current_user)):
     if current_user is None:
         raise InactiveUserException()
     return current_user
+
