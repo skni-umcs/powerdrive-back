@@ -13,7 +13,7 @@ services:
       - "8123:8000"
     volumes:
       - .:/app
-      - ./files:/app/files
+      - ./smaug_media:/app/files
     depends_on:
       db:
         condition: service_healthy
