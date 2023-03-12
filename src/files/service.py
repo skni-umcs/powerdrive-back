@@ -87,7 +87,9 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
 
     if file_metadata_create.is_dir:
         create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
-        return save_file_to_db(db, file_metadata_create, owner_id, "directory", 0)
+        # return save_file_to_db(db, filename=file_metadata_create, owner_id, "directory", 0, is_dir=True, )
+        return save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
+                               file_type=file_data.content_type, size=0, is_dir=file_metadata_create.is_dir)
 
     else:
         if check_if_file_exists_in_db(db, file_metadata_create.path, owner_id) or check_if_file_exists_in_disk(

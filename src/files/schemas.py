@@ -39,11 +39,13 @@ class FileMetadataCreate(FileMetadataBase):
 
 
 class FileMetadataUpdate(FileMetadataCreate):
+    filename: str
     id: int
 
 
 class FileMetadataInDB(FileMetadataBase):
     id: int
+    filename: str
     path: str
     type: str
     is_deleted: bool
@@ -55,6 +57,7 @@ class FileMetadataInDB(FileMetadataBase):
 
 class FileMetadata(FileMetadataBase):
     id: int
+    filename: str
     type: str
     size: int
 
