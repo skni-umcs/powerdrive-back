@@ -6,7 +6,8 @@ from src.files.exceptions import FileNotFoundException, FileAlreadyExistsExcepti
 from src.files.schemas import FileMetadataCreate, FileMetadataUpdate
 from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
-    check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, check_if_proper_dir_path
+    check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, \
+    check_if_proper_dir_path, metadata_valid_with_extension
 
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -42,33 +43,26 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         if check_if_file_exists_in_db(db, path, owner_id):
             continue
 
-        dir_metadata = DbFileMetadata(filename=name, path=path, type="directory", owner_id=owner_id,
+        dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
                                       size=0, is_dir=True,
-                                      parent_id=previous_dir.id)
+                                      parent_id=previous_dir.id, last_modified=datetime.now())
         db.add(dir_metadata)
         db.commit()
 
         previous_dir = dir_metadata
 
 
-
-def save_file_to_db(db: Session, file_metadata_create: FileMetadataCreate, owner_id: int,
+def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_id: int,
                     file_type: str, size: int) -> DbFileMetadata:
-    """
-    Save file metadata to db
-    :param size:
-    :param file_type:
-    :param db:
-    :param file_metadata_create:
-    :param owner_id:
-    :return:
-    """
-
     # print(file_metadata_create.path.rsplit("/", 1)[0])
+    parent_dir_name = path.rsplit("/", 1)[0]
+    if parent_dir_name == "":
+        parent_dir_name = "/"
+
     parent_dir = db.query(DbFileMetadata).filter(
-        DbFileMetadata.path == file_metadata_create.path.rsplit("/", 1)[0],
+        DbFileMetadata.path == parent_dir_name,
         DbFileMetadata.owner_id == owner_id).first()
-    db_file = DbFileMetadata(**file_metadata_create.dict(), type=file_type, size=size, owner_id=owner_id,
+    db_file = DbFileMetadata(filename=filename, path=path, is_dir=is_dir, type=file_type, size=size, owner_id=owner_id,
                              parent_id=parent_dir.id, last_modified=datetime.now())
 
     db.add(db_file)
@@ -80,7 +74,8 @@ def save_file_to_db(db: Session, file_metadata_create: FileMetadataCreate, owner
 def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadataCreate, file_data: UploadFile | None,
                                   owner_id: int) -> DbFileMetadata:
     """
-    Add new file to db and save it to disk
+    Add new file to db and save
+     it to disk
     :param db: SQLAlchemy session
     :param file_metadata_create: FileMetadataCreate object comes from request
     :param file_data: file data comes from request
@@ -102,6 +97,10 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
         if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id):
             raise FileAlreadyExistsException(file_metadata_create.path)
 
+        ## TODO is this needed?
+        # if not metadata_valid_with_extension(file_metadata_create.filename, file_data.content_type):
+        #     raise HTTPException(status_code=409, detail="File extension not correspond to file type")
+
         # if file_metadata_create.size == file_data.file.__sizeof__(): TODO enable this
         #     raise ValueError("File size is not equal to file size in metadata")
 
@@ -112,8 +111,8 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
 
         create_needed_dirs_in_db(db, file_metadata_create.path.rsplit('/', 1)[0], owner_id)
 
-        db_file = save_file_to_db(db, file_metadata_create, owner_id, file_data.content_type, size)
-        # TODO check file type
+        db_file = save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
+                                  file_type=file_data.content_type, size=size, is_dir=file_metadata_create.is_dir)
 
         return db_file
 

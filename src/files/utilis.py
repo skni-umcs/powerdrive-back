@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 
 from src.config import Settings
 from src.files.models import DbFileMetadata
+import mimetypes
+
+from datetime import datetime
 
 settings = Settings()
 
@@ -98,7 +101,7 @@ def get_and_creat_root_dir(db: Session, owner_id: int) -> DbFileMetadata:
 
     if not root_dir:
         root_dir = DbFileMetadata(path="/", filename="/", type="directory", owner_id=owner_id, size=0, is_dir=True,
-                                  is_root_dir=True)
+                                  is_root_dir=True, last_modified=datetime.now())
         db.add(root_dir)
         db.commit()
 
@@ -134,3 +137,14 @@ def check_if_proper_file_path(path: str) -> bool:
     True
     """
     return not path.endswith("/")
+
+
+def metadata_valid_with_extension(filename: str, content_type: str) -> bool:
+    """
+    Check if file metadata is valid with extension
+    :param filename: filename with extension
+    :param content_type: content type of file, from http stream
+    :return: True if extension corresponds to content type, False otherwise
+    """
+    mimetypes.init()
+    return content_type in mimetypes.guess_type(filename)

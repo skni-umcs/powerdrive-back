@@ -2,8 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-# from src.files.service import add_new_file_and_save_on_disk, get_file_metadata_by_id, delete_file_by_id, \
-#     get_file_children, change_file_content_on_disk
 import src.files.service as service
 
 from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException
@@ -30,6 +28,7 @@ async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataC
     Add new file to database and save it on disk
     """
     try:
+        print(file_data.filename)
         file_ = service.add_new_file_and_save_on_disk(db, file_meta, file_data, current_user.id)
     except FileAlreadyExistsException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -110,16 +109,17 @@ async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_d
 @api_router.put("/{file_id}/change_content", response_model=FileMetadata)
 async def change_file_content(file_id: int, file_data: UploadFile, db: Session = Depends(get_db),
                               current_user: User = Depends(get_current_user)):
+    """
+    Change file content, may be used to update file content
+
+    doesn't work for directories
+    """
     try:
         file_ = service.change_file_content_on_disk(db, file_id, file_data, current_user.id)
     except FileNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     return file_
 
-
-# @api_router.get("/{file_id}/zip", response_model=FileResponse)
-# def get_dir_content_as_zip(file_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
 
 @api_router.get("/{file_id}/list", response_model=list[FileMetadata])
 async def get_directory_children(file_id: int, db: Session = Depends(get_db),
@@ -128,7 +128,3 @@ async def get_directory_children(file_id: int, db: Session = Depends(get_db),
     Get directory's children
     """
     return service.get_children(db, file_id, current_user.id)
-
-# @api_router.get("/{dir_id/list", response_model=list[FileMetadata])
-# def list_files(dir_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     pass
