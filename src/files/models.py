@@ -9,13 +9,13 @@ class DbFileMetadata(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(255), nullable=True)
 
-    path = Column(String(1000), nullable=False)  # TODO virtual_file_path without filename
+    path = Column(String(1000), nullable=False)
 
-    type = Column(String(255), nullable=False)  # file type based on content type ?
+    type = Column(String(255), nullable=False)
 
     size = Column(Integer, nullable=False)  # file size in bytes
 
-    is_deleted = Column(Boolean, default=False)  # is file deleted`
+    is_deleted = Column(Boolean, default=False)
 
     owner_id = Column(Integer, ForeignKey('pd_user.id'), nullable=False)
 

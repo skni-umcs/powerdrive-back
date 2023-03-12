@@ -3,15 +3,9 @@ import json
 
 
 class FileMetadataBase(BaseModel):
-    filename: str  # name of file
-    path: str  # path to file with file name
-    is_dir: bool = False  # is file directory?
-
-    # type: str
-    # size: int
-    # is_dir: bool | None = None
-
-    # is_deleted: bool
+    # filename: str
+    path: str
+    is_dir: bool = False
 
     @validator('path')
     # @classmethod
@@ -23,9 +17,8 @@ class FileMetadataBase(BaseModel):
     @validator('path')
     # @classmethod
     def check_path_and_filename(cls, v, values, **kwargs):
-        # if not values['is_dir'] and not v.endswith(values['filename']):
-        if not v.endswith(values['filename']):
-            raise ValueError('Filename must be in path')
+        if v.endswith('/'):
+            raise ValueError('Path must not end with /')
         return v
 
 
