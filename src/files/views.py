@@ -13,12 +13,9 @@ from src.dependencies import get_db
 from src.user.service import get_by_index as get_user_by_index
 from src.user.schemas import User
 
+from src.auth.security import get_current_user
+
 api_router = APIRouter(prefix="/file", tags=["file"])
-
-
-def get_current_user() -> User:
-    db = get_db().__next__()
-    return get_user_by_index(db, 1)
 
 
 @api_router.post("", response_model=FileMetadata)

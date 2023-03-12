@@ -15,7 +15,7 @@ def get_password_hash(password) -> str:
     return pwd_context.hash(password)
 
 
-class DbUser(Base):
+class User(Base):
     __tablename__ = 'pd_user'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
