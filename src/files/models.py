@@ -9,7 +9,7 @@ class DbFileMetadata(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(255), nullable=True)
 
-    path = Column(String(1000), nullable=False)
+    path = Column(String(2500), nullable=False)
 
     type = Column(String(255), nullable=False)
 
