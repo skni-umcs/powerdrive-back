@@ -11,6 +11,7 @@ from src.database.core import create_db, check_all_tables
 settings = Settings()
 
 from src.user.models import User
+from src.group.models import Group
 
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
