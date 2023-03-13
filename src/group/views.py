@@ -19,6 +19,14 @@ async def add_group(group: GroupCreate, current_user: User = Depends(get_current
     return new_group
 
 
+@api_router.delete("/{group_id}", status_code=204)
+async def delete_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        service.delete_group_by_index(session=db, group_id=group_id, current_user_id=current_user.id)
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # @api_router.post("/{group_id}/add_user", response_model=GroupUser)
 # async def add_user_to_group(group_id: int, user: User,
 #                             current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -63,12 +71,7 @@ async def add_group(group: GroupCreate, current_user: User = Depends(get_current
 #     return updated_group
 #
 #
-# @api_router.delete("/{group_id}", status_code=204)
-# async def delete_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-#     try:
-#         service.delete_group_by_index(session=db, group_id=group_id, current_user_id=current_user.id)
-#     except GroupNotFoundException as e:
-#         raise HTTPException(status_code=404, detail=str(e))
+
 #
 #
 # @api_router.delete("/{group_id}/delete_user/{user_id}", status_code=204)

@@ -12,7 +12,7 @@ from fastapi import HTTPException
 def if_current_can_manipulate_group(session: Session, group_id: int, current_user_id: int) -> bool:
     if get_user_by_index(session=session, user_id=current_user_id).if_admin:
         return True
-    db_group = session.query(Group).filter(Group.group_owner_id == current_user_id).first()
+    db_group = session.query(Group).filter(Group.group_owner_id == group_id).first()
     if not db_group:
             return False
     if db_group.group_owner_id == current_user_id:
@@ -26,6 +26,15 @@ def if_current_can_see_group(session: Session, group_id: int, current_user_id: i
     if session.query(GroupUser).filter(GroupUser.group_id == group_id and GroupUser.user_id == current_user_id).first():
         return True
     return False
+
+
+def get_group_by_index(session: Session, group_id: int) -> Group:
+    group = session.query(Group).filter(Group.group_id == group_id).first()
+
+    if not group:
+        raise GroupNotFoundException()
+
+    return group
 
 
 def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
@@ -74,17 +83,7 @@ def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
 # #         raise HTTPException(status_code=401, detail=str("No group permission"))
 # #
 # #     return group
-# def get_group_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
-#     group = session.query(Group).filter(Group.group_id == group_id).first()
-#
-#     if not group:
-#         raise GroupNotFoundException()
-#
-#     if group.group_owner_id != current_user_id \
-#             or not get_user_by_index(session=session, user_id=current_user_id).if_admin:
-#         raise HTTPException(status_code=401, detail=str("No group permission"))
-#
-#     return group
+
 #
 #
 # def get_group_users(session: Session, group_id: int, current_user_id: int) -> list[User]:
@@ -164,11 +163,14 @@ def get_group_by_name(session: Session, group_name: str) -> Group:
 #     session.commit()
 #
 #
-# def delete_group_by_index(session: Session, group_id: int, current_user_id: int) -> None:
-#     db_group = get_group_by_index(session=session, group_id=group_id, current_user_id=current_user_id)
-#
-#     if not db_group:
-#         raise GroupNotFoundException
-#
-#     session.delete(db_group)
-#     session.commit()
+def delete_group_by_index(session: Session, group_id: int, current_user_id: int) -> None:
+    if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
+        db_group = get_group_by_index(session=session, group_id=group_id)
+
+        if not db_group:
+            raise GroupNotFoundException
+
+        session.delete(db_group)
+        session.commit()
+    else:
+        raise HTTPException(status_code=401, detail=str("No group permission"))
