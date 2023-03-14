@@ -146,6 +146,10 @@ def add_user_to_group(session: Session, group_id: int, new_user_id: int, current
         db_new_user = get_user_by_index(session=session, user_id=new_user_id)
     # if not db_new_user:
     #     raise UserNotFoundException()
+        group_user = session.query(GroupUser).filter(GroupUser.group_id == group_id
+                                                     and GroupUser.user_id == new_user_id).first()
+        if group_user:
+            return group_user
         group_user = GroupUser(group_id=group_id, user_id=new_user_id)
         session.add(group_user)
         session.commit()
