@@ -23,7 +23,8 @@ def if_current_can_manipulate_group(session: Session, group_id: int, current_use
 def if_current_can_see_group(session: Session, group_id: int, current_user_id: int) -> bool:
     if get_user_by_index(session=session, user_id=current_user_id).if_admin:
         return True
-    if session.query(GroupUser).filter(GroupUser.group_id == group_id and GroupUser.user_id == current_user_id).first():
+    if session.query(GroupUser).filter(GroupUser.group_id == group_id and GroupUser.user_id == current_user_id).first()\
+        or get_group_by_index(session=session, group_id=group_id).group_owner_id == current_user_id:
         return True
     return False
 
@@ -51,7 +52,7 @@ def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
 
 
 # def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
-#     if get_user_by_index(session=session, user_id=current_user_id).if_admin:
+#     if if_current_can_manipulate_group(session=session, group_id=0, current_user_id=current_user_id):
 #         groups = session.query(Group).all()
 #         if not groups:
 #             raise GroupNotFoundException()
@@ -72,17 +73,24 @@ def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
 #
 #
 #
-# # def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
-# #     group = session.query(Group).filter(Group.group_id == group_id).first()
-# #
-# #     if not group:
-# #         raise GroupNotFoundException()
-# #
-# #     if group.group_owner_id != current_user_id \
-# #             or not get_by_index(session=session, user_id=current_user_id).if_admin:
-# #         raise HTTPException(status_code=401, detail=str("No group permission"))
-# #
-# #     return group
+def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
+    if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
+        group = session.query(Group).filter(Group.group_id == group_id).first()
+
+        if not group:
+            raise GroupNotFoundException()
+
+        return group
+    if if_current_can_see_group(session=session, group_id=group_id, current_user_id=current_user_id):
+        group = session.query(Group).filter(Group.group_id == group_id).first()
+
+
+        if not group:
+            raise GroupNotFoundException()
+
+        return group
+
+    raise NoGroupPermissionsException()
 
 #
 #
