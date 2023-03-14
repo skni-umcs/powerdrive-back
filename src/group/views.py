@@ -81,13 +81,13 @@ async def update_group(group_id: int, incoming_group: GroupUpdate, current_user:
 #
 #
 
-#
-#
-# @api_router.delete("/{group_id}/delete_user/{user_id}", status_code=204)
-# async def delete_user_from_group(group_id: int, user_id: int, current_user: User = Depends(get_current_user),
-#                                  db: Session = Depends(get_db)):
-#     try:
-#         service.delete_user_from_group(session=db, group_id=group_id, user_id=user_id,
-#                                        current_user_id=current_user.id)
-#     except GroupNotFoundException as e:
-#         raise HTTPException(status_code=404, detail=str(e))
+
+
+@api_router.delete("/{group_id}/delete_user/{user_id}", status_code=204)
+async def delete_user_from_group(group_id: int, user_id: int, current_user: User = Depends(get_current_user),
+                                 db: Session = Depends(get_db)):
+    try:
+        service.delete_user_from_group(session=db, group_id=group_id, user_id=user_id,
+                                       current_user_id=current_user.id)
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
