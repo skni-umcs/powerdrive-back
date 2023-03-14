@@ -16,7 +16,6 @@ def if_current_can_manipulate_group(session: Session, group_id: int, current_use
     if not db_group:
         return False
     if db_group.group_owner_id == current_user_id:
-        print("bl")
         return True
     return False
 
