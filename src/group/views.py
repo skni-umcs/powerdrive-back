@@ -45,13 +45,21 @@ async def delete_group(group_id: int, current_user: User = Depends(get_current_u
 #
 #
 @api_router.get("/{group_id}", response_model=Group)
-async def get_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_group_by_index(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     try:
         group = service.get_by_index(session=db, group_id=group_id, current_user_id=current_user.id)
-
     except Exception as e:
         raise HTTPException(status_code=404, detail=str("Group not found"))
+    return group
+
+
+@api_router.get("/", response_model=list[Group])
+async def get_groups(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        group = service.get_all_groups(session=db, current_user_id=current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return group
 #
 #

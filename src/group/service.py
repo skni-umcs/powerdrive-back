@@ -51,28 +51,30 @@ def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
     return created_group
 
 
-# def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
-#     if if_current_can_manipulate_group(session=session, group_id=0, current_user_id=current_user_id):
-#         groups = session.query(Group).all()
-#         if not groups:
-#             raise GroupNotFoundException()
-#         return groups
-#
-#     db_group_for_user1 = session.query(GroupUser).filter(GroupUser.user_id == current_user_id).all()
-#     db_group_for_user2 = session.query(Group).filter(Group.group_owner_id == current_user_id).all()
-#
-#     index1 = [g.user_id for g in db_group_for_user1]
-#     index2 = [g.group_id for g in db_group_for_user2]
-#     index = index1 + index2
-#     unique_index = []
-#     [unique_index.append(i) for i in index if i not in unique_index]
-#     groups = [get_group_by_index(session, g, current_user_id) for g in unique_index]
-#     if not groups:
-#         raise GroupNotFoundException()
-#     return groups
-#
-#
-#
+def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
+    if get_user_by_index(session=session, user_id=current_user_id).if_admin:
+        groups = session.query(Group).all()
+        if not groups:
+            raise GroupNotFoundException()
+
+        return groups
+
+    db_group_for_user1 = session.query(GroupUser).filter(GroupUser.user_id == current_user_id).all()
+    db_group_for_user2 = session.query(Group).filter(Group.group_owner_id == current_user_id).all()
+
+    index1 = [g.user_id for g in db_group_for_user1]
+    index2 = [g.group_id for g in db_group_for_user2]
+    index = index1 + index2
+    unique_index = []
+    [unique_index.append(i) for i in index if i not in unique_index]
+    groups = [get_group_by_index(session, g_id) for g_id in unique_index]
+    print(groups)
+    if not groups:
+        raise GroupNotFoundException()
+    return groups
+
+
+
 def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
         group = session.query(Group).filter(Group.group_id == group_id).first()
