@@ -8,7 +8,6 @@ from src.user.models import User
 from fastapi import HTTPException
 
 
-
 def if_current_can_manipulate_group(session: Session, group_id: int, current_user_id: int) -> bool:
     if get_user_by_index(session=session, user_id=current_user_id).if_admin:
         return True
@@ -74,7 +73,6 @@ def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
     return groups
 
 
-
 def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
         group = session.query(Group).filter(Group.group_id == group_id).first()
@@ -86,7 +84,6 @@ def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group
     if if_current_can_see_group(session=session, group_id=group_id, current_user_id=current_user_id):
         group = session.query(Group).filter(Group.group_id == group_id).first()
 
-
         if not group:
             raise GroupNotFoundException()
 
@@ -94,28 +91,25 @@ def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group
 
     raise NoGroupPermissionsException()
 
-#
-#
-# def get_group_users(session: Session, group_id: int, current_user_id: int) -> list[User]:
-#     group = session.query(Group).filter(Group.group_id == group_id).first()
-#
-#     if not group:
-#         raise GroupNotFoundException()
-#
-#     if group.group_owner_id != current_user_id \
-#             or not get_user_by_index(session=session, user_id=current_user_id).if_admin:
-#         raise HTTPException(status_code=401, detail=str("No group permission"))
-#
-#     users = []
-#     group_users = session.query(GroupUser).filter(group_id == group_id).all()
-#     for gu in group_users:
-#         u = get_user_by_index(session=session, user_id=gu.user_id)
-#         if not u:
-#             raise UserNotFoundException()
-#         users.append(u)
-#     return users
-#
-#
+
+def get_group_users(session: Session, group_id: int, current_user_id: int) -> list[User]:
+    if if_current_can_see_group(session=session, group_id=group_id, current_user_id=current_user_id):
+        users = []
+        group_users = session.query(GroupUser).filter(GroupUser.group_id == group_id).all()
+        for user in group_users:
+            u = get_user_by_index(session=session, user_id=user.user_id)
+            if not u:
+                raise UserNotFoundException()
+            users.append(u)
+        if users:
+            print("je")
+        group = get_group_by_index(session=session, group_id=group_id)
+        users.append(get_user_by_index(session=session, user_id=group.group_owner_id))
+        return users
+
+    raise NoGroupPermissionsException()
+
+
 def get_group_by_name(session: Session, group_name: str) -> Group:
     group = session.query(Group).filter(Group.group_name == group_name).first()
     return group
@@ -158,7 +152,6 @@ def add_user_to_group(session: Session, group_id: int, new_user_id: int, current
     raise NoGroupPermissionsException()
 
 
-
 def delete_user_from_group(session: Session, group_id: int, user_id: int, current_user_id: int) -> None:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
         group_user = session.query(GroupUser).filter(GroupUser.group_id == group_id
@@ -174,6 +167,7 @@ def delete_user_from_group(session: Session, group_id: int, user_id: int, curren
 
     else:
         raise HTTPException(status_code=401, detail=str("No group permission"))
+
 
 def delete_group_by_index(session: Session, group_id: int, current_user_id: int) -> None:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
