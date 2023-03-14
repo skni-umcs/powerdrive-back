@@ -12,10 +12,11 @@ from fastapi import HTTPException
 def if_current_can_manipulate_group(session: Session, group_id: int, current_user_id: int) -> bool:
     if get_user_by_index(session=session, user_id=current_user_id).if_admin:
         return True
-    db_group = session.query(Group).filter(Group.group_owner_id == group_id).first()
+    db_group = session.query(Group).filter(Group.group_id == group_id).first()
     if not db_group:
-            return False
+        return False
     if db_group.group_owner_id == current_user_id:
+        print("bl")
         return True
     return False
 
@@ -117,23 +118,24 @@ def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group
 def get_group_by_name(session: Session, group_name: str) -> Group:
     group = session.query(Group).filter(Group.group_name == group_name).first()
     return group
-#
-#
-# def update_group_by_index(session: Session, incoming_group: GroupUpdate, current_user_id: int) -> Group:
-#     db_group = get_group_by_index(session=session, group_id=incoming_group.group_id, current_user_id=current_user_id)
-#
-#     if not db_group:
-#         raise GroupNotFoundException
-#
-#     if db_group.group_owner_id != current_user_id \
-#             or not get_user_by_index(session=session, user_id=current_user_id).if_admin:
-#         raise HTTPException(status_code=401, detail=str("No group permission"))
-#
-#     if incoming_group.group_description:
-#         db_group.group_description = incoming_group.group_description
-#
-#     session.commit()
-#     return db_group
+
+
+def update_group_by_index(session: Session, incoming_group: GroupUpdate, current_user_id: int) -> Group:
+    if if_current_can_manipulate_group(session=session, group_id=incoming_group.group_id,
+                                       current_user_id=current_user_id):
+        db_group = get_group_by_index(session=session, group_id=incoming_group.group_id)
+
+        if not db_group:
+            raise GroupNotFoundException
+        if incoming_group.group_description:
+            db_group.group_description = incoming_group.group_description
+        session.commit()
+        return db_group
+
+    raise NoGroupPermissionsException()
+
+
+
 #
 #
 # def add_user_to_group(session: Session, group_id: int, new_user_id: int, current_user_id: int) -> GroupUser:
