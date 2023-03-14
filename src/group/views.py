@@ -27,18 +27,18 @@ async def delete_group(group_id: int, current_user: User = Depends(get_current_u
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# @api_router.post("/{group_id}/add_user", response_model=GroupUser)
-# async def add_user_to_group(group_id: int, user: User,
-#                             current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-#     try:
-#         new_group_user = service.add_user_to_group(session=db,
-#                                                    group_id=group_id,
-#                                                    new_user_id=user.id, current_user_id=current_user.id)
-#     except Exception as e:
-#         raise HTTPException(status_code=404, detail=str(e))
-#     return new_group_user
-#
-#
+@api_router.post("/{group_id}/add_user", response_model=GroupUser)
+async def add_user_to_group(group_id: int, user: User,
+                            current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        new_group_user = service.add_user_to_group(session=db,
+                                                   group_id=group_id,
+                                                   new_user_id=user.id, current_user_id=current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return new_group_user
+
+
 # @api_router.get("/", response_model=list[Group])
 # async def get_all_groups(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 #     return service.get_all_groups(db, current_user.id)

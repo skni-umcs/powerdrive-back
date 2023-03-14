@@ -136,26 +136,23 @@ def update_group_by_index(session: Session, incoming_group: GroupUpdate, current
     raise NoGroupPermissionsException()
 
 
+def add_user_to_group(session: Session, group_id: int, new_user_id: int, current_user_id: int) -> GroupUser:
+    if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
+        db_group = get_group_by_index(session=session, group_id=group_id)
 
-#
-#
-# def add_user_to_group(session: Session, group_id: int, new_user_id: int, current_user_id: int) -> GroupUser:
-#     db_group = get_group_by_index(session=session, group_id=group_id, current_user_id=current_user_id)
-#
-#     if not db_group:
-#         raise GroupNotFoundException
-#
-#     if db_group.group_owner_id != current_user_id \
-#             or get_user_by_index(session=session, user_id=current_user_id).if_admin == False:
-#         raise HTTPException(status_code=401, detail=str("No group permission"))
-#
-#     db_new_user = get_user_by_index(session=session, user_id=new_user_id)
-#     if not db_new_user:
-#         raise UserNotFoundException()
-#     group_user = GroupUser(group_id=group_id, user_id=new_user_id)
-#     session.add(group_user)
-#     session.commit()
-#     return group_user
+        if not db_group:
+            raise GroupNotFoundException
+
+        db_new_user = get_user_by_index(session=session, user_id=new_user_id)
+    # if not db_new_user:
+    #     raise UserNotFoundException()
+        group_user = GroupUser(group_id=group_id, user_id=new_user_id)
+        session.add(group_user)
+        session.commit()
+        return group_user
+
+    raise NoGroupPermissionsException()
+
 #
 #
 # def delete_user_from_group(session: Session, group_id: int, user_id: int, current_user_id: int) -> None:
