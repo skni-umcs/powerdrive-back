@@ -1,0 +1,19 @@
+# send txt file
+POST http://localhost:8123/file
+
+accept: application/json
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file_data"; filename="gradlew.bat"
+
+< ./test.txt
+--WebAppBoundary
+Content-Disposition: form-data; name="file_meta"
+
+{
+  "filename": "test1.txt",
+  "path": "/a/b/c/test1.txt",
+  "is_dir": false
+}
+--WebAppBoundary--

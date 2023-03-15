@@ -4,10 +4,16 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
+    #      args:
+    #        - UID="1002"
+    #        - GID="1002"
+    ##        - "UID=${UID:-1000}"
+    #        - "GID=${GID:-1000}"
     ports:
       - "8123:8000"
     volumes:
       - .:/app
+      - ./smaug_media:/app/files
     depends_on:
       db:
         condition: service_healthy
@@ -23,7 +29,14 @@ services:
     volumes:
       - ./db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "powerdrive"]
+      test: [ "CMD", "pg_isready", "-U", "powerdrive" ]
       interval: 10s
       timeout: 5s
       retries: 5
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8080:8080
+#    environment:
+#      ADMINER_DEFAULT_SERVER: db
