@@ -65,3 +65,10 @@ class FileMetadata(FileMetadataBase):
 
     class Config:
         orm_mode = True
+
+
+class OnlyDirectory(FileMetadata):
+    children: list[FileMetadata] = []
+
+    class Config:
+        orm_mode = True

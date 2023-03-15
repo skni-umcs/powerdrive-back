@@ -286,3 +286,36 @@ def get_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadat
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
                                            DbFileMetadata.owner_id == owner_id).all()
+
+
+def get_user_root_dir(db: Session, user_id: int) -> DbFileMetadata:
+    """
+    Get user root dir
+    :param db: SQLAlchemy session
+    :param user_id: id of user
+    :return: DbFileMetadata object of root dir
+    """
+    return get_and_creat_root_dir(db, user_id)
+
+# def get_directory_child(db:Session, dir_in: DbFileMetadata) -> [DbFileMetadata]:
+#     result
+#     for ch in dir_in.children:
+#
+#
+#
+# def get_dir_tree(db:Session, user_id: int):
+#     """
+#     Get dir tree for user
+#     :param db: SQLAlchemy session
+#     :param user_id: id of user
+#     :return: dict with dir tree
+#     """
+#     root_dir = get_user_root_dir(db, user_id)
+#
+#     children = root_dir.children
+#     result = []
+#
+#     for ch in children:
+#         get_dir_tree(db, user_id)
+#
+#     return result

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 import src.files.service as service
 
 from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException
-from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate
+from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate, OnlyDirectory
 from src.files.utilis import get_base_path_for_user
 
 from src.dependencies import get_db
@@ -125,3 +125,18 @@ async def get_directory_children(file_id: int, db: Session = Depends(get_db),
     Get directory's children
     """
     return service.get_children(db, file_id, current_user.id)
+
+
+@api_router.get("/user_root_dir", response_model=list[FileMetadata])
+async def get_user_root_dir(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get user's root directory
+    """
+    return service.get_user_root_dir(db, current_user.id)
+
+# @api_router.get("/dir_tree", response_model=list[OnlyDirectory])
+# async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+#     """
+#     Get user's directory tree
+#     """
+#     return service.get_dir_tree(db, current_user.id)

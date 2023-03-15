@@ -2,6 +2,8 @@ from src.database.core import Base
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 
+from sqlalchemy.orm import relationship
+
 
 class DbFileMetadata(Base):
     __tablename__ = 'pd_file'
@@ -26,3 +28,7 @@ class DbFileMetadata(Base):
     parent_id = Column(Integer, ForeignKey('pd_file.id'))
 
     last_modified = Column(DateTime, nullable=False)
+
+    owner = relationship('User')
+
+    # children = relationship('DbFileMetadata', cascade='all, delete-orphan')
