@@ -1,6 +1,10 @@
 from __future__ import annotations
+
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, ValidationError, validator, root_validator
 import json
+
 
 class FileMetadataBase(BaseModel):
     # filename: str
@@ -63,6 +67,7 @@ class FileMetadata(FileMetadataBase):
     filename: str
     type: str
     size: int
+    last_modified: datetime
     # is_deleted: bool = False
 
     class Config:
