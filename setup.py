@@ -58,10 +58,12 @@ def _create_all_tables_if_needed():
 
 def _create_admin():
     logger.info("##### Creating admin user #####")
-    admin = User(username="admin", password="AdminAdmin1#", email="admin@example.com", first_name="admin",
-                 last_name="ADMIN", is_admin=True)
+    admin = user.add(get_db().__next__(),
+                     user.UserCreate(username="admin", password="AdminAdmin1#", email="admin@example.com",
+                                     first_name="admin",
+                                     last_name="ADMIN"))
     session = get_db().__next__()
-    session.add(admin)
+    admin.is_admin = True
     session.commit()
 
 

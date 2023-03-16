@@ -18,6 +18,28 @@ from src.auth.security import get_current_user
 api_router = APIRouter(prefix="/file", tags=["file"])
 
 
+@api_router.get("/user_root_dir", response_model=FileMetadata)
+async def get_user_root_dir(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get user's root directory
+    """
+    res = service.get_user_root_dir(db, current_user.id)
+    # res = 1
+    print(res)
+    print(res.path)
+    return res
+
+
+@api_router.get("/dir_tree", response_model=OnlyDirectory)
+# @api_router.get("/dir_tree/")
+async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get user's directory tree
+    """
+    res = service.get_dir_tree(db, current_user.id)
+    return res
+
+
 @api_router.post("", response_model=FileMetadata)
 async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataCreate = Form(),
                    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -35,6 +57,21 @@ async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataC
     #     print(e)
     #     raise HTTPException(status_code=status.HTTP_507_INSUFFICIENT_STORAGE, detail=str(e))
 
+    return file_
+
+
+@api_router.put("", response_model=FileMetadata)
+async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    """
+    Update file metadata, may be used to rename file or move it to another directory
+
+    can't change file content
+    """
+    try:
+        file_ = service.update_file(db, file_meta, current_user.id)
+    except FileNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     return file_
 
 
@@ -89,20 +126,6 @@ async def delete_file(file_id: int, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@api_router.put("", response_model=FileMetadata)
-async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_db),
-                      current_user: User = Depends(get_current_user)):
-    """
-    Update file metadata, may be used to rename file or move it to another directory
-
-    can't change file content
-    """
-    try:
-        file_ = service.update_file(db, file_meta, current_user.id)
-    except FileNotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    return file_
-
 
 @api_router.put("/{file_id}/change_content", response_model=FileMetadata)
 async def change_file_content(file_id: int, file_data: UploadFile, db: Session = Depends(get_db),
@@ -126,31 +149,3 @@ async def get_directory_children(file_id: int, db: Session = Depends(get_db),
     Get directory's children
     """
     return service.get_children(db, file_id, current_user.id)
-
-
-# @api_router.get("/user_root_dir")
-@api_router.get("/user_root_dir/", response_model=FileMetadata)
-async def get_user_root_dir(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """
-    Get user's root directory
-    """
-    res = service.get_user_root_dir(db, current_user.id)
-    # res = 1
-    print(res)
-    print(res.path)
-    return res
-
-
-@api_router.get("/dir_tree/", response_model=OnlyDirectory)
-# @api_router.get("/dir_tree/")
-async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """
-    Get user's directory tree
-    """
-    res = service.get_dir_tree(db, current_user.id)
-    return res
-
-
-@api_router.get("/abc/")
-async def get_abc():
-    return {"abc": "abc"}
