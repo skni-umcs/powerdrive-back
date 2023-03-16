@@ -129,13 +129,13 @@ async def get_directory_children(file_id: int, db: Session = Depends(get_db),
 
 
 # @api_router.get("/user_root_dir")
-@api_router.get("/user_root_dir", response_model=FileMetadata)
+@api_router.get("/user_root_dir/", response_model=FileMetadata)
 async def get_user_root_dir(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Get user's root directory
     """
-    # res = service.get_user_root_dir(db, current_user.id)
-    res = 1
+    res = service.get_user_root_dir(db, current_user.id)
+    # res = 1
     print(res)
     print(res.path)
     return res
@@ -151,6 +151,6 @@ async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depen
     return res
 
 
-@api_router.get("/abc")
+@api_router.get("/abc/")
 async def get_abc():
     return {"abc": "abc"}
