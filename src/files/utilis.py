@@ -104,7 +104,7 @@ def get_and_creat_root_dir(db: Session, owner_id: int) -> DbFileMetadata:
                                   is_root_dir=True, last_modified=datetime.now())
         db.add(root_dir)
         db.commit()
-
+    print(root_dir.id)
     return root_dir
 
 

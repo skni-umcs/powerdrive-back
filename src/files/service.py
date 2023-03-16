@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException, DirException
-from src.files.schemas import FileMetadataCreate, FileMetadataUpdate
+from src.files.schemas import FileMetadataCreate, FileMetadataUpdate, OnlyDirectory
 from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
     check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, \
@@ -32,7 +32,7 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
     """
     # print(path)
     dir_list = path.split("/")[1:]
-
+    # print(dir_list)
     previous_dir = get_and_creat_root_dir(db, owner_id)
     path = ""
 
@@ -50,6 +50,8 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         db.commit()
 
         previous_dir = dir_metadata
+
+    return previous_dir
 
 
 def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_id: int,
@@ -86,10 +88,10 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
         raise HTTPException(status_code=409, detail="File data is None")
 
     if file_metadata_create.is_dir:
-        create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
+        return create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
         # return save_file_to_db(db, filename=file_metadata_create, owner_id, "directory", 0, is_dir=True, )
-        return save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
-                               file_type=file_data.content_type, size=0, is_dir=file_metadata_create.is_dir)
+        # return save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
+        #                        file_type="directory" size=0, is_dir=file_metadata_create.is_dir)
 
     else:
         if check_if_file_exists_in_db(db, file_metadata_create.path, owner_id) or check_if_file_exists_in_disk(
@@ -297,25 +299,44 @@ def get_user_root_dir(db: Session, user_id: int) -> DbFileMetadata:
     """
     return get_and_creat_root_dir(db, user_id)
 
-# def get_directory_child(db:Session, dir_in: DbFileMetadata) -> [DbFileMetadata]:
-#     result
-#     for ch in dir_in.children:
-#
-#
-#
-# def get_dir_tree(db:Session, user_id: int):
-#     """
-#     Get dir tree for user
-#     :param db: SQLAlchemy session
-#     :param user_id: id of user
-#     :return: dict with dir tree
-#     """
-#     root_dir = get_user_root_dir(db, user_id)
-#
-#     children = root_dir.children
-#     result = []
-#
-#     for ch in children:
-#         get_dir_tree(db, user_id)
-#
-#     return result
+
+def filter_children_by_is_dir(db: Session, file_id: int, owner_id: int, is_dir: bool) -> list[DbFileMetadata]:
+    """
+    Get children files of file
+    :param db: SQLAlchemy session
+    :param file_id: id of file
+    :param owner_id: id of user
+    :param is_dir: is dir
+    :return: List of DbFileMetadata objects
+    """
+
+    return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
+                                           DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_dir == is_dir).all()
+
+
+def pom2(db: Session, dir_in: DbFileMetadata, owner_id: int, is_dir: bool) -> OnlyDirectory:
+    children = filter_children_by_is_dir(db, dir_in.id, owner_id, is_dir)
+    result = []
+
+    for child in children:
+        result.append(pom2(db, child, owner_id, is_dir))
+
+    res = OnlyDirectory(**dir_in.__dict__, children=result)
+    return res
+
+
+def get_dir_tree(db: Session, owner_id: int) -> OnlyDirectory:
+    """
+    Get dir tree
+    :param db: SQLAlchemy session
+    :param owner_id: id of user
+    :return: List of DbFileMetadata objects
+    """
+
+    root_dir = get_user_root_dir(db, owner_id)
+    dir_tree = [root_dir]
+
+    children = pom2(db, root_dir, owner_id, True)
+
+    return children

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 import src.files.service as service
 
 from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException
-from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate, OnlyDirectory
+from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate, OnlyDirectory, FileMetadataInDB
 from src.files.utilis import get_base_path_for_user
 
 from src.dependencies import get_db
@@ -25,7 +25,7 @@ async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataC
     Add new file to database and save it on disk
     """
     try:
-        print(file_data.filename)
+        # print(file_data.filename)
         file_ = service.add_new_file_and_save_on_disk(db, file_meta, file_data, current_user.id)
     except FileAlreadyExistsException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -55,6 +55,7 @@ async def get_file_details(file_id: int, db: Session = Depends(get_db), current_
         file_ = service.get_file_metadata_by_id(db, file_id, current_user.id)
     except FileNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    print(file_.path)
     return file_
 
 
@@ -127,16 +128,29 @@ async def get_directory_children(file_id: int, db: Session = Depends(get_db),
     return service.get_children(db, file_id, current_user.id)
 
 
-@api_router.get("/user_root_dir", response_model=list[FileMetadata])
+# @api_router.get("/user_root_dir")
+@api_router.get("/user_root_dir", response_model=FileMetadata)
 async def get_user_root_dir(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Get user's root directory
     """
-    return service.get_user_root_dir(db, current_user.id)
+    # res = service.get_user_root_dir(db, current_user.id)
+    res = 1
+    print(res)
+    print(res.path)
+    return res
 
-# @api_router.get("/dir_tree", response_model=list[OnlyDirectory])
-# async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     """
-#     Get user's directory tree
-#     """
-#     return service.get_dir_tree(db, current_user.id)
+
+@api_router.get("/dir_tree/", response_model=OnlyDirectory)
+# @api_router.get("/dir_tree/")
+async def get_dir_tree(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get user's directory tree
+    """
+    res = service.get_dir_tree(db, current_user.id)
+    return res
+
+
+@api_router.get("/abc")
+async def get_abc():
+    return {"abc": "abc"}

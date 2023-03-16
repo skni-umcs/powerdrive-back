@@ -1,6 +1,6 @@
+from __future__ import annotations
 from pydantic import BaseModel, EmailStr, ValidationError, validator, root_validator
 import json
-
 
 class FileMetadataBase(BaseModel):
     # filename: str
@@ -10,16 +10,19 @@ class FileMetadataBase(BaseModel):
     @validator('path')
     # @classmethod
     def check_path(cls, v):
+        if len(v) > 2500:
+            raise ValueError('Path is too long')
+
+        if v == '/':
+            return v
+
         if v[0] != '/':
             raise ValueError('Path must start with /')
-        return v
 
-    @validator('path')
-    # @classmethod
-    def check_path_and_filename(cls, v, values, **kwargs):
-        if v.endswith('/'):
+        if v[-1] == '/':
             raise ValueError('Path must not end with /')
         return v
+
 
 
 class FileMetadataCreate(FileMetadataBase):
@@ -60,7 +63,6 @@ class FileMetadata(FileMetadataBase):
     filename: str
     type: str
     size: int
-
     # is_deleted: bool = False
 
     class Config:
@@ -68,7 +70,8 @@ class FileMetadata(FileMetadataBase):
 
 
 class OnlyDirectory(FileMetadata):
-    children: list[FileMetadata] = []
+    # TODO fix in swagger
+    children: list[OnlyDirectory] = []
 
     class Config:
         orm_mode = True
