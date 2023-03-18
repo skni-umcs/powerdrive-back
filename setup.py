@@ -6,10 +6,10 @@ from psycopg2 import sql
 from src.config import Settings
 from src.database.core import create_db, check_all_tables
 
-# from
 
 settings = Settings()
 
+# Import models here for table creation
 from src.user.models import User
 
 # logging.basicConfig(level=logging.INFO)
