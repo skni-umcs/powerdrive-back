@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.user.views import api_router as user_router
 from src.auth.views import api_router as auth_router
 from src.admin.views import api_router as admin_router
