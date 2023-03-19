@@ -98,10 +98,11 @@ def get_group_users(session: Session, group_id: int, current_user_id: int) -> li
             if not u:
                 raise UserNotFoundException()
             users.append(u)
-        if users:
-            print("je")
+
         group = get_group_by_index(session=session, group_id=group_id)
-        users.append(get_user_by_index(session=session, user_id=group.group_owner_id))
+        if not session.query(GroupUser).filter(GroupUser.group_id == group_id)\
+            .filter(GroupUser.user_id == group.group_owner_id).first():
+            users.append(get_user_by_index(session=session, user_id=group.group_owner_id))
         return users
 
     raise NoGroupPermissionsException()
