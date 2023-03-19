@@ -2,13 +2,13 @@ from pydantic import BaseModel
 
 
 class GroupBase(BaseModel):
-    group_name: str | None
-    group_description: str | None
-    group_owner_id: int | None
+    group_name: str
+    group_description: str
+    group_owner_id: int
 
 
 class GroupCreate(GroupBase):
-    group_name: str
+    pass
 
 
 class GroupUpdate(GroupBase):
@@ -17,12 +17,10 @@ class GroupUpdate(GroupBase):
 
 class Group(GroupBase):
     group_id: int
-    group_name: str
-    group_description: str | None
-    group_owner_id: int
 
     class Config:
         orm_mode = True
+
 
 
 class GroupUser(BaseModel):
