@@ -59,13 +59,12 @@ def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
     db_group_for_user1 = session.query(GroupUser).filter(GroupUser.user_id == current_user_id).all()
     db_group_for_user2 = session.query(Group).filter(Group.group_owner_id == current_user_id).all()
 
-    index1 = [g.user_id for g in db_group_for_user1]
+    index1 = [g.group_id for g in db_group_for_user1]
     index2 = [g.group_id for g in db_group_for_user2]
     index = index1 + index2
     unique_index = []
     [unique_index.append(i) for i in index if i not in unique_index]
     groups = [get_group_by_index(session, g_id) for g_id in unique_index]
-    print(groups)
 
     return groups
 
