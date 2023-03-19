@@ -15,6 +15,7 @@ import src.user as user
 settings = Settings()
 
 from src.user.models import User
+from src.group.models import Group
 from src.files.models import DbFileMetadata
 
 # logging.basicConfig(level=logging.INFO)
