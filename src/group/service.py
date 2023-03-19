@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 
 def if_current_can_manipulate_group(session: Session, group_id: int, current_user_id: int) -> bool:
-    if get_user_by_index(session=session, user_id=current_user_id).if_admin:
+    if get_user_by_index(session=session, user_id=current_user_id).is_admin:
         return True
     db_group = session.query(Group).filter(Group.group_id == group_id).first()
     if not db_group:
@@ -20,7 +20,7 @@ def if_current_can_manipulate_group(session: Session, group_id: int, current_use
 
 
 def if_current_can_see_group(session: Session, group_id: int, current_user_id: int) -> bool:
-    if get_user_by_index(session=session, user_id=current_user_id).if_admin:
+    if get_user_by_index(session=session, user_id=current_user_id).is_admin:
         return True
     if session.query(GroupUser).filter(GroupUser.group_id == group_id and GroupUser.user_id == current_user_id).first()\
         or get_group_by_index(session=session, group_id=group_id).group_owner_id == current_user_id:
@@ -51,10 +51,8 @@ def add_group(group: GroupCreate, session: Session, owner_id: int) -> Group:
 
 
 def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
-    if get_user_by_index(session=session, user_id=current_user_id).if_admin:
+    if get_user_by_index(session=session, user_id=current_user_id).is_admin:
         groups = session.query(Group).all()
-        if not groups:
-            raise GroupNotFoundException()
 
         return groups
 
@@ -68,8 +66,7 @@ def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
     [unique_index.append(i) for i in index if i not in unique_index]
     groups = [get_group_by_index(session, g_id) for g_id in unique_index]
     print(groups)
-    if not groups:
-        raise GroupNotFoundException()
+
     return groups
 
 
