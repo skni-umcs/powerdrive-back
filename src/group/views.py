@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from src.group.exceptions import GroupNotFoundException, OwnerNotFoundException
+from src.group.exceptions import GroupNotFoundException, GroupNameAlreadyExistsException, NoGroupPermissionsException
+from src.user.exceptions import UserNotFoundException
 from fastapi import APIRouter, Depends, HTTPException
 from src.group import service
 from src.group.schemas import Group, GroupCreate, GroupUpdate, GroupUser
@@ -14,7 +15,7 @@ api_router = APIRouter(prefix="/group", tags=["group"])
 async def add_group(group: GroupCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         new_group = service.add_group(group=group, session=db, owner_id=current_user.id)
-    except Exception as e:
+    except GroupNameAlreadyExistsException as e:
         raise HTTPException(status_code=404, detail=str(e))
     return new_group
 
@@ -23,8 +24,12 @@ async def add_group(group: GroupCreate, current_user: User = Depends(get_current
 async def delete_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         service.delete_group_by_index(session=db, group_id=group_id, current_user_id=current_user.id)
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except GroupNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 @api_router.post("/{group_id}/add_user", response_model=GroupUser)
@@ -34,8 +39,12 @@ async def add_user_to_group(group_id: int, user: User,
         new_group_user = service.add_user_to_group(session=db,
                                                    group_id=group_id,
                                                    new_user_id=user.id, current_user_id=current_user.id)
-    except Exception as e:
+    except UserNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))
     return new_group_user
 
 
@@ -44,8 +53,10 @@ async def get_group_by_index(group_id: int, current_user: User = Depends(get_cur
 
     try:
         group = service.get_by_index(session=db, group_id=group_id, current_user_id=current_user.id)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str("Group not found"))
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))
     return group
 
 
@@ -53,7 +64,7 @@ async def get_group_by_index(group_id: int, current_user: User = Depends(get_cur
 async def get_groups(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         group = service.get_all_groups(session=db, current_user_id=current_user.id)
-    except Exception as e:
+    except GroupNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
     return group
 
@@ -62,8 +73,12 @@ async def get_groups(current_user: User = Depends(get_current_user), db: Session
 async def get_group_users(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         users = service.get_group_users(session=db, group_id=group_id, current_user_id=current_user.id)
-    except Exception as e:
+    except UserNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except GroupNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))
     return users
 
 
@@ -73,8 +88,10 @@ async def update_group(group_id: int, incoming_group: GroupUpdate, current_user:
     try:
         updated_group = service.update_group_by_index(session=db, incoming_group=incoming_group,
                                                       current_user_id=current_user.id)
-    except Exception as e:
+    except GroupNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
     return updated_group
 
@@ -85,5 +102,9 @@ async def delete_user_from_group(group_id: int, user_id: int, current_user: User
     try:
         service.delete_user_from_group(session=db, group_id=group_id, user_id=user_id,
                                        current_user_id=current_user.id)
+    except UserNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except GroupNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except NoGroupPermissionsException as e:
+        raise HTTPException(status_code=401, detail=str(e))

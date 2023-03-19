@@ -1,5 +1,4 @@
-from src.group.exceptions import GroupNotFoundException, OwnerNotFoundException, \
-    GroupNameAlreadyExistsException, UserNotFoundException, NoGroupPermissionsException
+from src.group.exceptions import GroupNotFoundException,GroupNameAlreadyExistsException, NoGroupPermissionsException
 from sqlalchemy.orm import Session
 from src.group.models import Group, GroupUser
 from src.group.schemas import GroupCreate, GroupUpdate
@@ -22,7 +21,7 @@ def if_current_can_manipulate_group(session: Session, group_id: int, current_use
 def if_current_can_see_group(session: Session, group_id: int, current_user_id: int) -> bool:
     if get_user_by_index(session=session, user_id=current_user_id).is_admin:
         return True
-    if session.query(GroupUser).filter(GroupUser.group_id == group_id and GroupUser.user_id == current_user_id).first()\
+    if session.query(GroupUser).filter(GroupUser.group_id == group_id).filter(GroupUser.user_id == current_user_id).first()\
         or get_group_by_index(session=session, group_id=group_id).group_owner_id == current_user_id:
         return True
     return False
@@ -71,18 +70,13 @@ def get_all_groups(session: Session, current_user_id: int) -> list[Group]:
 
 def get_by_index(session: Session, group_id: int, current_user_id: int) -> Group:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
-        group = session.query(Group).filter(Group.group_id == group_id).first()
 
-        if not group:
-            raise GroupNotFoundException()
-
+        group = get_group_by_index(session=session, group_id=group_id)
         return group
+
     if if_current_can_see_group(session=session, group_id=group_id, current_user_id=current_user_id):
-        group = session.query(Group).filter(Group.group_id == group_id).first()
 
-        if not group:
-            raise GroupNotFoundException()
-
+        group = get_group_by_index(session=session, group_id=group_id)
         return group
 
     raise NoGroupPermissionsException()
@@ -94,8 +88,6 @@ def get_group_users(session: Session, group_id: int, current_user_id: int) -> li
         group_users = session.query(GroupUser).filter(GroupUser.group_id == group_id).all()
         for user in group_users:
             u = get_user_by_index(session=session, user_id=user.user_id)
-            if not u:
-                raise UserNotFoundException()
             users.append(u)
 
         group = get_group_by_index(session=session, group_id=group_id)
@@ -117,8 +109,6 @@ def update_group_by_index(session: Session, incoming_group: GroupUpdate, current
                                        current_user_id=current_user_id):
         db_group = get_group_by_index(session=session, group_id=incoming_group.group_id)
 
-        if not db_group:
-            raise GroupNotFoundException
         if incoming_group.group_description:
             db_group.group_description = incoming_group.group_description
         session.commit()
@@ -130,10 +120,6 @@ def update_group_by_index(session: Session, incoming_group: GroupUpdate, current
 def add_user_to_group(session: Session, group_id: int, new_user_id: int, current_user_id: int) -> GroupUser:
     if if_current_can_manipulate_group(session=session, group_id=group_id, current_user_id=current_user_id):
         db_group = get_group_by_index(session=session, group_id=group_id)
-
-        if not db_group:
-            raise GroupNotFoundException
-
         db_new_user = get_user_by_index(session=session, user_id=new_user_id)
 
         group_user = session.query(GroupUser).filter(GroupUser.group_id == group_id)\
@@ -162,7 +148,7 @@ def delete_user_from_group(session: Session, group_id: int, user_id: int, curren
         session.commit()
 
     else:
-        raise HTTPException(status_code=401, detail=str("No group permission"))
+        raise NoGroupPermissionsException()
 
 
 def delete_group_by_index(session: Session, group_id: int, current_user_id: int) -> None:
@@ -178,4 +164,4 @@ def delete_group_by_index(session: Session, group_id: int, current_user_id: int)
         session.delete(db_group)
         session.commit()
     else:
-        raise HTTPException(status_code=401, detail=str("No group permission"))
+        raise NoGroupPermissionsException()
