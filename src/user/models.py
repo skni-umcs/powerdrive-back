@@ -25,5 +25,5 @@ class User(Base):
 
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-    if_admin = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
     # description = Column(String(100))
