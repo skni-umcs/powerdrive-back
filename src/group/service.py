@@ -175,7 +175,10 @@ def delete_group_by_index(session: Session, group_id: int, current_user_id: int)
 
         if not db_group:
             raise GroupNotFoundException
-
+        users_in_group = session.query(GroupUser).filter(GroupUser.group_id == group_id).all()
+        for user in users_in_group:
+            delete_user_from_group(session=session, group_id=group_id,
+                                   user_id=user.user_id,current_user_id=current_user_id)
         session.delete(db_group)
         session.commit()
     else:

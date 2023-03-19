@@ -16,7 +16,7 @@ def get_password_hash(password) -> str:
 
 
 class User(Base):
-    __tablename__ = 'User'
+    __tablename__ = 'pd_user'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(100), unique=True, nullable=False)

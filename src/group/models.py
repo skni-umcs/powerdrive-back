@@ -4,14 +4,14 @@ from sqlalchemy import Column, Integer, String
 
 
 class GroupUser(Base):
-    __tablename__ = 'GroupUser'
+    __tablename__ = 'pd_group_user'
     group_user_id = Column(Integer, primary_key=True, autoincrement=True)
     group_id = Column(Integer)
     user_id = Column(Integer)
 
 
 class Group(Base):
-    __tablename__ = 'Group'
+    __tablename__ = 'pd_group'
     group_id = Column(Integer, primary_key=True, autoincrement=True)
     group_name = Column(String(100))
     group_description = Column(String(100))
