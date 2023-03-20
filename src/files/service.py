@@ -164,21 +164,28 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     return file_metadata
 
 
-def move_file_to_trash(path, owner_id) -> None:
+def move_file_to_trash(filename: str, path: str, owner_id: int) -> None:
     """
     Move file to trash
+    :param filename: name of file
     :param path: path to file
     :param owner_id: id of user
+    :param is_dir: is file directory
     :return: None
     """
-    trash_dir = get_trash_dir_path(owner_id)
+    # if not check_if_file_exists_in_disk(path, owner_id=owner_id, filename=filename):
+    #     raise FileNotFoundException(123)
 
-    if not os.path.exists(trash_dir):
-        os.mkdir(trash_dir)
+    trash_path = get_trash_dir_path(owner_id)
 
-    full_trash_path = trash_dir + path.rsplit("/", 1)[1]
+    if not os.path.exists(trash_path):
+        os.makedirs(trash_path)
 
-    shutil.move(get_path_for_file(owner_id, path), full_trash_path)
+    if os.path.exists(trash_path + filename):
+        os.remove(trash_path + filename)
+
+    # shutil.move(get_path_for_file(owner_id, path) + "/" + , trash_path)
+    os.remove(get_path_for_file(owner_id, path) + "/" + filename)
 
 
 def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
@@ -195,7 +202,42 @@ def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileM
                                            DbFileMetadata.is_deleted == False).all()
 
 
-# def get_ch
+def delete_file(db: Session, file_metadata: DbFileMetadata, owner_id: int):
+    """
+    Delete file from db and disk
+    :param db: SQLAlchemy session
+    :param file_metadata: DbFileMetadata object of file
+    :param owner_id: id of user
+    :return: None
+    """
+    file_metadata.is_deleted = True
+
+    if not file_metadata.is_dir:
+        move_file_to_trash(file_metadata.filename, file_metadata.path, owner_id)
+
+    db.commit()
+
+
+def delete_dir(db: Session, file_metadata: DbFileMetadata, owner_id: int):
+    """
+    Delete directory from db and disk
+    :param db: SQLAlchemy session
+    :param file_metadata: DbFileMetadata object of file
+    :param owner_id: id of user
+    :return: None
+    """
+    file_metadata.is_deleted = True
+
+    children_files = get_children_files(db, file_metadata.id, owner_id)
+
+    for child in children_files:
+        if child.is_dir:
+            delete_dir(db, child, owner_id)
+        else:
+            delete_file(db, child, owner_id)
+
+    db.commit()
+    os.rmdir(get_path_for_file(owner_id, file_metadata.path))
 
 
 def delete_file_by_id(db: Session, file_id: int, owner_id: int):
@@ -209,18 +251,9 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
     file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
 
     if file_metadata.is_dir:
-        children = get_children_files(db, file_id, owner_id)
-        for child in children:
-            delete_file_by_id(db, child.id, owner_id)
-
-    if not file_metadata.is_root_dir:
-        move_file_to_trash(file_metadata.path, owner_id=owner_id)
-        file_metadata.is_deleted = True
-        file_metadata.last_modified = datetime.now()
-        db.commit()
-
-    # db.refresh(file_metadata)
-    # return file_metadata
+        delete_dir(db, file_metadata, owner_id)
+    else:
+        delete_file(db, file_metadata, owner_id)
 
 
 def move_file_on_disk(old_path, new_path, owner_id):
