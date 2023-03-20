@@ -346,7 +346,8 @@ def get_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadat
     """
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
-                                           DbFileMetadata.owner_id == owner_id).all()
+                                           DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False).all()
 
 
 def get_user_root_dir(db: Session, user_id: int) -> DbFileMetadata:
