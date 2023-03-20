@@ -17,7 +17,7 @@ def get_base_path_for_user(user_id: id) -> str:
     :param user_id: id of user
     :return: base files path
     """
-    print(os.path.join(settings.base_file_path, str(user_id)))
+    # print(os.path.join(settings.base_file_path, str(user_id)))
     return os.path.join(settings.base_file_path, str(user_id))
 
 
@@ -50,14 +50,21 @@ def check_if_file_exists_in_db(db: Session, filename: str, virtual_path: str, ow
                                            DbFileMetadata.owner_id == owner_id).first() is not None
 
 
-def check_if_file_exists_in_disk(virtual_path: str, owner_id: int) -> bool:
+def check_if_file_exists_in_disk(virtual_path: str, owner_id: int, filename: str = None) -> bool:
     """
     Check if file exists in disk
     :param virtual_path: path to file from db
     :param owner_id: file owner id
+    :param filename: name of file
     :return: True if file exists, False otherwise
     """
-    return os.path.exists(os.path.join(get_base_path_for_user(owner_id), virtual_path))
+    if filename:
+        if virtual_path == '/':
+            virtual_path = ''
+        path = get_base_path_for_user(owner_id) + virtual_path + '/' + filename
+        return os.path.exists(os.path.join(path, filename))
+    else:
+        return os.path.exists(os.path.join(get_base_path_for_user(owner_id), virtual_path))
 
 
 def check_if_not_enough_space(size, user_id):

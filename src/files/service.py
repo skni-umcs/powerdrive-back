@@ -40,6 +40,9 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         path += "/" + directory
         name = directory
 
+        if name == "":
+            continue
+
         if check_if_file_exists_in_db(db, name, path, owner_id):
             continue
 
@@ -107,12 +110,12 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
         return create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
 
     else:  # FILE
-        if check_if_file_exists_in_db(db, file_data.filename, file_metadata_create.path,
-                                      owner_id) or check_if_file_exists_in_disk(
-                file_metadata_create.path, owner_id=owner_id):
-            raise FileAlreadyExistsException("File already exists")
+        file = check_if_file_exists_in_db(db, file_data.filename, file_metadata_create.path,
+                                          owner_id)
+        if file:
+            raise FileAlreadyExistsException("File already exists in db")
 
-        if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id):
+        if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id, filename=file_data.filename):
             raise FileAlreadyExistsException("File aready exists")
 
         ## TODO is this needed?
