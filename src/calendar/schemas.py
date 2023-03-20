@@ -59,98 +59,98 @@ class Event(EventBase):
         orm_mode = True
 
 
-class ReoccurrenceBase(BaseModel):
+class ReoccurringEventBase(BaseModel):
     name: str
     start_date: str
     end_date: str
     description: str
 
 
-class ReoccurrenceCreate(ReoccurrenceBase):
+class ReoccurringEventCreate(ReoccurringEventBase):
     pass
 
 
-class ReoccurrenceUpdate(ReoccurrenceBase):
+class ReoccurringEventUpdate(ReoccurringEventBase):
     id: int
 
 
-class ReoccurrenceInDB(ReoccurrenceBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class Reoccurrence(ReoccurrenceBase):
+class ReoccurringEventInDB(ReoccurringEventBase):
     id: int
 
     class Config:
         orm_mode = True
 
 
-class CycleBase(BaseModel):
+class ReoccurringEvent(ReoccurringEventBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class EventsCycleBase(BaseModel):
     name: str
     description: str
 
 
-class CycleCreate(CycleBase):
+class EventsCycleCreate(EventsCycleBase):
     pass
 
 
-class CycleUpdate(CycleBase):
+class EventsCycleUpdate(EventsCycleBase):
     id: int
 
 
-class CycleInDB(CycleBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class Cycle(CycleBase):
+class EventsCycleInDB(EventsCycleBase):
     id: int
 
     class Config:
         orm_mode = True
 
 
-class EventCycleBase(BaseModel):
+class EventsCycle(EventsCycleBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class EventToCycleBase(BaseModel):
     event_id: int
     cycle_id: int
 
 
-class EventCycleCreate(EventCycleBase):
+class EventToCycleCreate(EventToCycleBase):
     pass
 
 
-class EventCycleUpdate(EventCycleBase):
+class EventToCycleUpdate(EventToCycleBase):
     id: int
 
 
-class EventCycleInDB(EventCycleBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class EventCycle(EventCycleBase):
+class EventToCycleInDB(EventToCycleBase):
     id: int
 
     class Config:
         orm_mode = True
 
 
-class ReoccurrenceCycleBase(BaseModel):
+class EventToCycle(EventToCycleBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class ReoccurringEventToCycleBase(BaseModel):
     reoccurrence_id: int
     cycle_id: int
 
 
-class ReoccurrenceCycleCreate(ReoccurrenceCycleBase):
+class ReoccurringEventToCycleCreate(ReoccurringEventToCycleBase):
     pass
 
 
-class ReoccurrenceCycleUpdate(ReoccurrenceCycleBase):
+class ReoccurringEventToCycleUpdate(ReoccurringEventToCycleBase):
     id: int
 

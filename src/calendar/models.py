@@ -8,6 +8,7 @@ class Calendar(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=False)
 
     owner_id = Column(Integer, ForeignKey('User.id'), nullable=False)
 
@@ -26,8 +27,8 @@ class Event(Base):
     calendar_id = Column(Integer, ForeignKey('Calendar.id'), nullable=False)
 
 
-class Reoccurrence(Base):
-    __tablename__ = 'Reoccurrence'
+class ReoccurringEvent(Base):
+    __tablename__ = 'ReoccurringEvent'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
@@ -38,8 +39,8 @@ class Reoccurrence(Base):
     organizer_id = Column(Integer, ForeignKey('User.id'), nullable=False)
 
 
-class Cycle(Base):
-    __tablename__ = 'Cycle'
+class EventsCycle(Base):
+    __tablename__ = 'EventsCycle'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
@@ -50,17 +51,17 @@ class Cycle(Base):
     organizer_id = Column(Integer, ForeignKey('User.id'), nullable=False)
 
 
-class EventCycle(Base):
-    __tablename__ = 'EventCycle'
+class EventToCycle(Base):
+    __tablename__ = 'EventToCycle'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey('Event.id'), nullable=False)
-    cycle_id = Column(Integer, ForeignKey('Cycle.id'), nullable=False)
+    cycle_id = Column(Integer, ForeignKey('EventsCycle.id'), nullable=False)
 
 
-class ReoccurrenceCycle(Base):
-    __tablename__ = 'ReoccurrenceCycle'
+class ReoccurringEventToCycle(Base):
+    __tablename__ = 'ReoccurringEventToCycle'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    reoccurrence_id = Column(Integer, ForeignKey('Reoccurrence.id'), nullable=False)
-    cycle_id = Column(Integer, ForeignKey('Cycle.id'), nullable=False)
+    reoccurrence_id = Column(Integer, ForeignKey('ReoccurringEvent.id'), nullable=False)
+    cycle_id = Column(Integer, ForeignKey('EventsCycle.id'), nullable=False)
