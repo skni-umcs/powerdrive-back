@@ -32,7 +32,7 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
     """
     # print(path)
     dir_list = path.split("/")[1:]
-    print(dir_list)
+    # print(dir_list)
     previous_dir = get_and_creat_root_dir(db, owner_id)
     path = ""
 
@@ -127,7 +127,7 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
 
         size = save_file_to_disk(file_data, file_metadata_create.path, owner_id=owner_id)
 
-        create_needed_dirs_in_db(db, file_metadata_create.path.rsplit('/', 1)[0], owner_id)
+        create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
 
         db_file = save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
                                   file_type=file_data.content_type, size=size, is_dir=file_metadata_create.is_dir)
