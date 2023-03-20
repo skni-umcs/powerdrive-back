@@ -41,32 +41,41 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         name = directory
 
         if name == "":
-            continue
+            name = "/"
 
         if check_if_file_exists_in_db(db, name, path, owner_id):
-            continue
+            previous_dir = db.query(DbFileMetadata).filter(
+                DbFileMetadata.path == path,
+                DbFileMetadata.owner_id == owner_id).first()
 
-        dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
-                                      size=0, is_dir=True,
-                                      parent_id=previous_dir.id, last_modified=datetime.now())
-        db.add(dir_metadata)
-        db.commit()
 
-        previous_dir = dir_metadata
+        else:
+            dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
+                                          size=0, is_dir=True,
+                                          parent_id=previous_dir.id, last_modified=datetime.now())
+            db.add(dir_metadata)
+            db.commit()
 
+            previous_dir = dir_metadata
+
+    # print(previous_dir.path)
     return previous_dir
 
 
 def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_id: int,
                     file_type: str, size: int) -> DbFileMetadata:
-    # print(file_metadata_create.path.rsplit("/", 1)[0])
-    parent_dir_name = path.rsplit("/", 1)[0]
-    if parent_dir_name == "":
-        parent_dir_name = "/"
+    # print(path.rsplit("/", 1)[0])
+    # parent_dir_name = path.rsplit("/", 1)[0]
+
+    # if parent_dir_name == "":
+    # parent_dir_name = "/"
 
     parent_dir = db.query(DbFileMetadata).filter(
-        DbFileMetadata.path == parent_dir_name,
+        DbFileMetadata.path == path,
         DbFileMetadata.owner_id == owner_id).first()
+
+    print(parent_dir.path)
+
     db_file = DbFileMetadata(filename=filename, path=path, is_dir=is_dir, type=file_type, size=size, owner_id=owner_id,
                              parent_id=parent_dir.id, last_modified=datetime.now())
 
