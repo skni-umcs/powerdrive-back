@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class CalendarBase(BaseModel):
@@ -31,8 +32,8 @@ class Calendar(CalendarBase):
 class EventBase(BaseModel):
     name: str
     place: str
-    start_date: str
-    end_date: str
+    start_date: datetime
+    end_date: datetime
     description: str
     calendar_id: int
 
@@ -61,8 +62,8 @@ class Event(EventBase):
 
 class ReoccurringEventBase(BaseModel):
     name: str
-    start_date: str
-    end_date: str
+    start_date: datetime
+    end_date: datetime
     description: str
 
 

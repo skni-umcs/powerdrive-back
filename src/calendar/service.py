@@ -37,6 +37,7 @@ def update_calendar(db: Session, calendar: CalendarUpdate):
 
 
 def delete_calendar(db: Session, calendar_id: int):
+    delete_calendar_events(db, calendar_id)
     db_calendar = db.query(Calendar).filter(Calendar.id == calendar_id).first()
     db.delete(db_calendar)
     db.commit()
@@ -44,6 +45,10 @@ def delete_calendar(db: Session, calendar_id: int):
 
 def get_event(db: Session, event_id: int):
     return db.query(Event).filter(Event.id == event_id).first()
+
+
+def get_calendar_events(db: Session, calendar_id: int):
+    return db.query(Event).filter(Event.calendar_id == calendar_id).all()
 
 
 def get_events(db: Session, calendar_id: int):
@@ -55,13 +60,33 @@ def get_events_date_constrained(db: Session, calendar_id: int, start_date: str, 
         .filter(or_(Event.start_date <= end_date, Event.end_date >= start_date)).all()
 
 
+def get_user_events(db: Session, user_id: int):
+    return db.query(Event).filter(Event.organizer_id == user_id).all()
+
+
 def create_event(db: Session, event: EventCreate, user_id: int):
     db_event = Event(**event.dict())
-    db_event.calendar_id = user_id
+    db_event.organizer_id = user_id
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
     return db_event
+
+
+def delete_event(db: Session, event_id: int):
+    db_event = db.query(Event).filter(Event.id == event_id).first()
+    db.delete(db_event)
+    db.commit()
+
+
+def delete_calendar_events(db: Session, calendar_id: int):
+    db.query(Event).filter(Event.calendar_id == calendar_id).delete()
+    db.commit()
+
+
+def check_for_event(db: Session, event: EventCreate) -> Event | None:
+    return db.query(Event).filter(Event.calendar_id == event.calendar_id).filter(Event.name == event.name)\
+        .filter(Event.start_date == event.start_date).filter(Event.end_date == event.end_date).first()
 
 
 def get_reoccurrence(db: Session, reoccurringEvent_id: int):
