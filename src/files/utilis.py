@@ -41,13 +41,17 @@ def check_if_file_exists_in_db(db: Session, filename: str, virtual_path: str, ow
     """
     Check if file exists in db
     :param db: SQLAlchemy session
+    :param filename: name of file
     :param virtual_path: path to file from db
     :param owner_id: file owner id
     :return: True if file exists, False otherwise
     """
     return db.query(DbFileMetadata).filter(DbFileMetadata.path == virtual_path,
                                            DbFileMetadata.filename == filename,
-                                           DbFileMetadata.owner_id == owner_id).first() is not None
+                                           DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False
+
+                                           ).first() is not None
 
 
 def check_if_file_exists_in_disk(virtual_path: str, owner_id: int, filename: str = None) -> bool:

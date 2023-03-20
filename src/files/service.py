@@ -46,6 +46,7 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         if check_if_file_exists_in_db(db, name, path, owner_id):
             previous_dir = db.query(DbFileMetadata).filter(
                 DbFileMetadata.path == path,
+                DbFileMetadata.is_deleted == False,
                 DbFileMetadata.owner_id == owner_id).first()
 
 
@@ -72,6 +73,7 @@ def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_i
 
     parent_dir = db.query(DbFileMetadata).filter(
         DbFileMetadata.path == path,
+        DbFileMetadata.is_deleted == False,
         DbFileMetadata.owner_id == owner_id).first()
 
     print(parent_dir.path)
@@ -156,6 +158,7 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     :return: DbFileMetadata object of file
     """
     file_metadata = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                                    DbFileMetadata.is_deleted == False,
                                                     DbFileMetadata.owner_id == owner_id).first()
 
     if not file_metadata:
@@ -372,6 +375,7 @@ def filter_children_by_is_dir(db: Session, file_id: int, owner_id: int, is_dir: 
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
                                            DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False,
                                            DbFileMetadata.is_dir == is_dir).all()
 
 
