@@ -7,7 +7,7 @@ from src.files.schemas import FileMetadataCreate, FileMetadataUpdate, OnlyDirect
 from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
     check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, \
-    check_if_proper_dir_path, metadata_valid_with_extension
+    check_if_proper_dir_path, metadata_valid_with_extension, create_dirs_on_disk
 
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -32,7 +32,7 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
     """
     # print(path)
     dir_list = path.split("/")[1:]
-    # print(dir_list)
+    print(dir_list)
     previous_dir = get_and_creat_root_dir(db, owner_id)
     path = ""
 
@@ -40,7 +40,7 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         path += "/" + directory
         name = directory
 
-        if check_if_file_exists_in_db(db, path, owner_id):
+        if check_if_file_exists_in_db(db, name, path, owner_id):
             continue
 
         dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
@@ -84,22 +84,36 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
     :param owner_id: id of user from JWT
     :return: DbFileMetadata object of new file
     """
+
+    ### VALIDATION
+    if file_metadata_create.path == "/" and file_metadata_create.is_dir:
+        raise HTTPException(status_code=409, detail="Cannot create root directory in this way")  # WORKS
+
+    if file_data is not None and file_metadata_create.is_dir:
+        raise HTTPException(status_code=409, detail="File data is not None")  # WORKS
+
     if file_data is None and not file_metadata_create.is_dir:
-        raise HTTPException(status_code=409, detail="File data is None")
+        raise HTTPException(status_code=409, detail="File data is None")  # WORKS
 
-    if file_metadata_create.is_dir:
+    ### END OF VALIDATION
+
+    if file_metadata_create.is_dir:  # DIRERCTORY
+        # check if dir exists in db
+        if check_if_file_exists_in_db(db, file_metadata_create.path.split('/')[-1], file_metadata_create.path,
+                                      owner_id):
+            raise DirException("Directory already exists")  # TO CHECK
+
+        create_dirs_on_disk(file_metadata_create.path, user_id=owner_id)
         return create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
-        # return save_file_to_db(db, filename=file_metadata_create, owner_id, "directory", 0, is_dir=True, )
-        # return save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
-        #                        file_type="directory" size=0, is_dir=file_metadata_create.is_dir)
 
-    else:
-        if check_if_file_exists_in_db(db, file_metadata_create.path, owner_id) or check_if_file_exists_in_disk(
+    else:  # FILE
+        if check_if_file_exists_in_db(db, file_data.filename, file_metadata_create.path,
+                                      owner_id) or check_if_file_exists_in_disk(
                 file_metadata_create.path, owner_id=owner_id):
             raise FileAlreadyExistsException("File already exists")
 
         if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id):
-            raise FileAlreadyExistsException(file_metadata_create.path)
+            raise FileAlreadyExistsException("File aready exists")
 
         ## TODO is this needed?
         # if not metadata_valid_with_extension(file_metadata_create.filename, file_data.content_type):
@@ -230,7 +244,7 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
         # TODO check if works correctly
 
     if file_metadata_update.path:
-        if check_if_file_exists_in_db(db, file_metadata_update.path, owner_id):
+        if check_if_file_exists_in_db(db, file_metadata.filename, file_metadata_update.path, owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
         if check_if_file_exists_in_disk(file_metadata_update.path, owner_id=owner_id):

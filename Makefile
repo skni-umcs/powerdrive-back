@@ -29,6 +29,7 @@ bash_db:
 clear: drop_db
 	docker compose down --rmi local --volumes --remove-orphans
 	sudo rm -rf files
+	sudo rm -rf smaug_media
 
 
 clear_all:

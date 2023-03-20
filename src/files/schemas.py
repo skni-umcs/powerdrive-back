@@ -25,8 +25,13 @@ class FileMetadataBase(BaseModel):
 
         if v[-1] == '/':
             raise ValueError('Path must not end with /')
+
+        if '//' in v:
+            raise ValueError('Path must not contain //')
+
         return v
 
+    # replace multiple slashes with one
 
 
 class FileMetadataCreate(FileMetadataBase):
