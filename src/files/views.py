@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 import src.files.service as service
 
-from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException
+from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException, DirException
 from src.files.schemas import FileMetadata, FileMetadataCreate, FileMetadataUpdate, OnlyDirectory, FileMetadataInDB
 from src.files.utilis import get_base_path_for_user
 
@@ -49,7 +49,7 @@ async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataC
     try:
         # print(file_data.filename)
         file_ = service.add_new_file_and_save_on_disk(db, file_meta, file_data, current_user.id)
-    except FileAlreadyExistsException as e:
+    except (FileAlreadyExistsException, DirException) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     # except ValueError as e:
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -69,6 +69,7 @@ async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_d
     can't change file content
     """
     try:
+        print(file_meta.path)
         file_ = service.update_file(db, file_meta, current_user.id)
     except FileNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -111,7 +112,8 @@ async def download_file(file_id: int, db: Session = Depends(get_db), current_use
     if file_.is_dir:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't download directory (yet)")
 
-    return FileResponse(get_base_path_for_user(current_user.id) + file_.path, filename=file_.filename,
+    return FileResponse(get_base_path_for_user(current_user.id) + file_.path + "/" + file_.filename,
+                        filename=file_.filename,
                         media_type=file_.type)
 
 

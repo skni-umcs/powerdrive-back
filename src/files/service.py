@@ -7,7 +7,7 @@ from src.files.schemas import FileMetadataCreate, FileMetadataUpdate, OnlyDirect
 from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
     check_if_file_exists_in_disk, get_path_for_file, save_file_to_disk, get_and_creat_root_dir, \
-    check_if_proper_dir_path, metadata_valid_with_extension
+    check_if_proper_dir_path, metadata_valid_with_extension, create_dirs_on_disk
 
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -40,30 +40,44 @@ def create_needed_dirs_in_db(db: Session, path: str, owner_id: int):
         path += "/" + directory
         name = directory
 
-        if check_if_file_exists_in_db(db, path, owner_id):
-            continue
+        if name == "":
+            name = "/"
 
-        dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
-                                      size=0, is_dir=True,
-                                      parent_id=previous_dir.id, last_modified=datetime.now())
-        db.add(dir_metadata)
-        db.commit()
+        if check_if_file_exists_in_db(db, name, path, owner_id):
+            previous_dir = db.query(DbFileMetadata).filter(
+                DbFileMetadata.path == path,
+                DbFileMetadata.is_deleted == False,
+                DbFileMetadata.owner_id == owner_id).first()
 
-        previous_dir = dir_metadata
 
+        else:
+            dir_metadata = DbFileMetadata(filename=name, path=path, type="DIR", owner_id=owner_id,
+                                          size=0, is_dir=True,
+                                          parent_id=previous_dir.id, last_modified=datetime.now())
+            db.add(dir_metadata)
+            db.commit()
+
+            previous_dir = dir_metadata
+
+    # print(previous_dir.path)
     return previous_dir
 
 
 def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_id: int,
                     file_type: str, size: int) -> DbFileMetadata:
-    # print(file_metadata_create.path.rsplit("/", 1)[0])
-    parent_dir_name = path.rsplit("/", 1)[0]
-    if parent_dir_name == "":
-        parent_dir_name = "/"
+    # print(path.rsplit("/", 1)[0])
+    # parent_dir_name = path.rsplit("/", 1)[0]
+
+    # if parent_dir_name == "":
+    # parent_dir_name = "/"
 
     parent_dir = db.query(DbFileMetadata).filter(
-        DbFileMetadata.path == parent_dir_name,
+        DbFileMetadata.path == path,
+        DbFileMetadata.is_deleted == False,
         DbFileMetadata.owner_id == owner_id).first()
+
+    print(parent_dir.path)
+
     db_file = DbFileMetadata(filename=filename, path=path, is_dir=is_dir, type=file_type, size=size, owner_id=owner_id,
                              parent_id=parent_dir.id, last_modified=datetime.now())
 
@@ -84,22 +98,36 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
     :param owner_id: id of user from JWT
     :return: DbFileMetadata object of new file
     """
+
+    ### VALIDATION
+    if file_metadata_create.path == "/" and file_metadata_create.is_dir:
+        raise HTTPException(status_code=409, detail="Cannot create root directory in this way")  # WORKS
+
+    if file_data is not None and file_metadata_create.is_dir:
+        raise HTTPException(status_code=409, detail="File data is not None")  # WORKS
+
     if file_data is None and not file_metadata_create.is_dir:
-        raise HTTPException(status_code=409, detail="File data is None")
+        raise HTTPException(status_code=409, detail="File data is None")  # WORKS
 
-    if file_metadata_create.is_dir:
+    ### END OF VALIDATION
+
+    if file_metadata_create.is_dir:  # DIRERCTORY
+        # check if dir exists in db
+        if check_if_file_exists_in_db(db, file_metadata_create.path.split('/')[-1], file_metadata_create.path,
+                                      owner_id):
+            raise DirException("Directory already exists")  # TO CHECK
+
+        create_dirs_on_disk(file_metadata_create.path, user_id=owner_id)
         return create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
-        # return save_file_to_db(db, filename=file_metadata_create, owner_id, "directory", 0, is_dir=True, )
-        # return save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
-        #                        file_type="directory" size=0, is_dir=file_metadata_create.is_dir)
 
-    else:
-        if check_if_file_exists_in_db(db, file_metadata_create.path, owner_id) or check_if_file_exists_in_disk(
-                file_metadata_create.path, owner_id=owner_id):
-            raise FileAlreadyExistsException("File already exists")
+    else:  # FILE
+        file = check_if_file_exists_in_db(db, file_data.filename, file_metadata_create.path,
+                                          owner_id)
+        if file:
+            raise FileAlreadyExistsException("File already exists in db")
 
-        if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id):
-            raise FileAlreadyExistsException(file_metadata_create.path)
+        if check_if_file_exists_in_disk(file_metadata_create.path, owner_id=owner_id, filename=file_data.filename):
+            raise FileAlreadyExistsException("File aready exists")
 
         ## TODO is this needed?
         # if not metadata_valid_with_extension(file_metadata_create.filename, file_data.content_type):
@@ -113,7 +141,7 @@ def add_new_file_and_save_on_disk(db: Session, file_metadata_create: FileMetadat
 
         size = save_file_to_disk(file_data, file_metadata_create.path, owner_id=owner_id)
 
-        create_needed_dirs_in_db(db, file_metadata_create.path.rsplit('/', 1)[0], owner_id)
+        create_needed_dirs_in_db(db, file_metadata_create.path, owner_id)
 
         db_file = save_file_to_db(db, filename=file_data.filename, path=file_metadata_create.path, owner_id=owner_id,
                                   file_type=file_data.content_type, size=size, is_dir=file_metadata_create.is_dir)
@@ -130,6 +158,7 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     :return: DbFileMetadata object of file
     """
     file_metadata = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                                    DbFileMetadata.is_deleted == False,
                                                     DbFileMetadata.owner_id == owner_id).first()
 
     if not file_metadata:
@@ -138,21 +167,28 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     return file_metadata
 
 
-def move_file_to_trash(path, owner_id) -> None:
+def move_file_to_trash(filename: str, path: str, owner_id: int) -> None:
     """
     Move file to trash
+    :param filename: name of file
     :param path: path to file
     :param owner_id: id of user
+    :param is_dir: is file directory
     :return: None
     """
-    trash_dir = get_trash_dir_path(owner_id)
+    # if not check_if_file_exists_in_disk(path, owner_id=owner_id, filename=filename):
+    #     raise FileNotFoundException(123)
 
-    if not os.path.exists(trash_dir):
-        os.mkdir(trash_dir)
+    trash_path = get_trash_dir_path(owner_id)
 
-    full_trash_path = trash_dir + path.rsplit("/", 1)[1]
+    if not os.path.exists(trash_path):
+        os.makedirs(trash_path)
 
-    shutil.move(get_path_for_file(owner_id, path), full_trash_path)
+    if os.path.exists(trash_path + filename):
+        os.remove(trash_path + filename)
+
+    # shutil.move(get_path_for_file(owner_id, path) + "/" + , trash_path)
+    os.remove(get_path_for_file(owner_id, path) + "/" + filename)
 
 
 def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
@@ -169,7 +205,42 @@ def get_children_files(db: Session, file_id: int, owner_id: int) -> list[DbFileM
                                            DbFileMetadata.is_deleted == False).all()
 
 
-# def get_ch
+def delete_file(db: Session, file_metadata: DbFileMetadata, owner_id: int):
+    """
+    Delete file from db and disk
+    :param db: SQLAlchemy session
+    :param file_metadata: DbFileMetadata object of file
+    :param owner_id: id of user
+    :return: None
+    """
+    file_metadata.is_deleted = True
+
+    if not file_metadata.is_dir:
+        move_file_to_trash(file_metadata.filename, file_metadata.path, owner_id)
+
+    db.commit()
+
+
+def delete_dir(db: Session, file_metadata: DbFileMetadata, owner_id: int):
+    """
+    Delete directory from db and disk
+    :param db: SQLAlchemy session
+    :param file_metadata: DbFileMetadata object of file
+    :param owner_id: id of user
+    :return: None
+    """
+    file_metadata.is_deleted = True
+
+    children_files = get_children_files(db, file_metadata.id, owner_id)
+
+    for child in children_files:
+        if child.is_dir:
+            delete_dir(db, child, owner_id)
+        else:
+            delete_file(db, child, owner_id)
+
+    db.commit()
+    os.rmdir(get_path_for_file(owner_id, file_metadata.path))
 
 
 def delete_file_by_id(db: Session, file_id: int, owner_id: int):
@@ -183,18 +254,9 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
     file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
 
     if file_metadata.is_dir:
-        children = get_children_files(db, file_id, owner_id)
-        for child in children:
-            delete_file_by_id(db, child.id, owner_id)
-
-    if not file_metadata.is_root_dir:
-        move_file_to_trash(file_metadata.path, owner_id=owner_id)
-        file_metadata.is_deleted = True
-        file_metadata.last_modified = datetime.now()
-        db.commit()
-
-    # db.refresh(file_metadata)
-    # return file_metadata
+        delete_dir(db, file_metadata, owner_id)
+    else:
+        delete_file(db, file_metadata, owner_id)
 
 
 def move_file_on_disk(old_path, new_path, owner_id):
@@ -230,7 +292,7 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
         # TODO check if works correctly
 
     if file_metadata_update.path:
-        if check_if_file_exists_in_db(db, file_metadata_update.path, owner_id):
+        if check_if_file_exists_in_db(db, file_metadata.filename, file_metadata_update.path, owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
         if check_if_file_exists_in_disk(file_metadata_update.path, owner_id=owner_id):
@@ -287,7 +349,8 @@ def get_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadat
     """
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
-                                           DbFileMetadata.owner_id == owner_id).all()
+                                           DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False).all()
 
 
 def get_user_root_dir(db: Session, user_id: int) -> DbFileMetadata:
@@ -312,6 +375,7 @@ def filter_children_by_is_dir(db: Session, file_id: int, owner_id: int, is_dir: 
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
                                            DbFileMetadata.owner_id == owner_id,
+                                           DbFileMetadata.is_deleted == False,
                                            DbFileMetadata.is_dir == is_dir).all()
 
 
