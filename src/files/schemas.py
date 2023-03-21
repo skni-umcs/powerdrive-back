@@ -50,7 +50,7 @@ class FileMetadataCreate(FileMetadataBase):
         return value
 
 
-class FileMetadataUpdate(FileMetadataCreate):
+class FileMetadataUpdate(FileMetadataBase):
     filename: str
     id: int
 
