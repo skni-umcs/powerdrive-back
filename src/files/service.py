@@ -73,6 +73,7 @@ def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_i
 
     parent_dir = db.query(DbFileMetadata).filter(
         DbFileMetadata.path == path,
+        DbFileMetadata.is_dir == True,
         DbFileMetadata.is_deleted == False,
         DbFileMetadata.owner_id == owner_id).first()
 
