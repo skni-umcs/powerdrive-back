@@ -27,7 +27,7 @@ from src.dependencies import get_db
 api_router = APIRouter(prefix="/calendar", tags=["calendar"])
 
 
-@api_router.get("/", response_model=list[Calendar])
+@api_router.get("/all", response_model=list[Calendar])
 async def get_calendars(current_user: User = Depends(get_current_user),
                         db: Session = Depends(get_db)) -> list[Calendar]:
     return get_user_calendars_service(db, current_user.id)
