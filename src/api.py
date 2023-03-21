@@ -11,6 +11,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
+    "http://212.182.25.252:8080",
     "http://powerdrive.skni.umcs.pl",
     "https://powerdrive.skni.umcs.pl",
     "http://smaug.skni.umcs.pl",
