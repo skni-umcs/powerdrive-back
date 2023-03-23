@@ -75,16 +75,16 @@ def check_if_not_enough_space(size, user_id):
     return os.statvfs(get_base_path_for_user(user_id)).f_bavail > size
 
 
-def get_path_for_file(user_id: int, virtual_path: str) -> str:
+def get_path_for_file(user_id: int, virtual_path: str, ) -> str:
     """
-    Compose physical path from virtual path(path store in db) ended with /
+    Compose physical path from virtual path (path store in db) WITHOUT filename
     :param user_id: id of user
     :param virtual_path: path from db
     :param is_dir: if path is directory
     :return: physical path
     """
 
-    return get_base_path_for_user(user_id) + virtual_path + '/'
+    return get_base_path_for_user(user_id) + virtual_path
 
 
 def save_file_to_disk(file_data, virtual_path: str, owner_id: id) -> int:

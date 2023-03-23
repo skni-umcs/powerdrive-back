@@ -26,3 +26,9 @@ class DirException(Exception):
     def __init__(self, dir_name: str):
         self.dir_name = dir_name
         super().__init__(f"Directory with name {dir_name} HAS PROBLEM")
+
+
+class FileIsNotDirException(Exception):
+    def __init__(self, file_name: str):
+        self.file_name = file_name
+        super().__init__(f"File with name {file_name} is not a directory")

@@ -7,7 +7,15 @@ from src.auth.views import api_router as auth_router
 from src.admin.views import api_router as admin_router
 from src.files.views import api_router as file_router
 
-app = FastAPI()
+from src.config import Settings
+
+sett = Settings()
+
+app = FastAPI(root_path=sett.root_path,
+              title="Smaug",
+              description="Smaug is a file management system, API for powerdrive",
+              version="0.0.1-dev",
+              swagger_ui_parameters={"docExpansion": "none"})
 
 origins = [
     "http://localhost:3000",

@@ -48,6 +48,7 @@ async def add_file(file_data: UploadFile | None = None, file_meta: FileMetadataC
     """
     try:
         # print(file_data.filename)
+        print(file_meta)
         file_ = service.add_new_file_and_save_on_disk(db, file_meta, file_data, current_user.id)
     except (FileAlreadyExistsException, DirException) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -69,7 +70,6 @@ async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_d
     can't change file content
     """
     try:
-        print(file_meta.path)
         file_ = service.update_file(db, file_meta, current_user.id)
     except FileNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
