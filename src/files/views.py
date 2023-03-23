@@ -70,7 +70,6 @@ async def update_file(file_meta: FileMetadataUpdate, db: Session = Depends(get_d
     can't change file content
     """
     try:
-        print(file_meta.__class__)
         file_ = service.update_file(db, file_meta, current_user.id)
     except FileNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

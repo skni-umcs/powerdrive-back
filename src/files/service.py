@@ -2,7 +2,7 @@ import shutil
 from datetime import datetime
 from pydantic import ValidationError
 
-from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException, DirException
+from src.files.exceptions import FileNotFoundException, FileAlreadyExistsException, DirException, FileIsNotDirException
 from src.files.schemas import FileMetadataCreate, FileMetadataUpdate, OnlyDirectory
 from src.files.models import DbFileMetadata
 from src.files.utilis import get_trash_dir_path, check_if_file_exists_in_db, \
@@ -70,10 +70,12 @@ def save_file_to_db(db: Session, filename: str, path: str, is_dir: bool, owner_i
 
     # if parent_dir_name == "":
     # parent_dir_name = "/"
+    dir_name = path.rsplit("/", 1)[-1]
 
     parent_dir = db.query(DbFileMetadata).filter(
         DbFileMetadata.path == path,
         DbFileMetadata.is_dir == True,
+        DbFileMetadata.name == dir_name,
         DbFileMetadata.is_deleted == False,
         DbFileMetadata.owner_id == owner_id).first()
 
@@ -263,8 +265,8 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
 def move_file_on_disk(old_path, new_path, owner_id):
     """
     Move file on disk
-    :param old_path: old path to file
-    :param new_path: new path to file
+    :param old_path: old path to file with filename/dir name
+    :param new_path: new path to file with filename/dir name
     :param owner_id: id of user
     :return: None
     """
@@ -272,6 +274,28 @@ def move_file_on_disk(old_path, new_path, owner_id):
     new_path = get_path_for_file(owner_id, new_path)
 
     shutil.move(old_path, new_path)
+
+
+def path_for_file(v_path: str, filename: str, owner_id: int) -> str:
+    """
+    Get path for file
+    :param v_path: path to file
+    :param filename: name of file
+    :param owner_id: id of user
+    :return: path to file
+    """
+    return get_path_for_file(owner_id, v_path) + "/" + filename
+
+
+def path_for_dir(v_path: str, dir_name: str, owner_id: int) -> str:
+    """
+    Get path for dir /path contains dir name
+    :param v_path: path to dir
+    :param dir_name: name of dir
+    :param owner_id: id of user
+    :return: path to dir
+    """
+    return get_path_for_file(owner_id, v_path)
 
 
 def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id: int) -> DbFileMetadata:
@@ -284,31 +308,46 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
     """
     file_metadata = get_file_metadata_by_id(db, file_metadata_update.id, owner_id)
 
-    if file_metadata.is_dir:
-        children = get_children_files(db, file_metadata.id, owner_id)
-        for ch in children:
-            update_file(db, FileMetadataUpdate(id=ch.id,
-                                               path=file_metadata_update.path + ch.path[len(file_metadata.path):]),
-                        owner_id)
-        # TODO check if works correctly
+    if file_metadata_update.is_dir and not file_metadata.is_dir:
+        raise FileIsNotDirException(file_metadata.filename)
 
-    if file_metadata_update.path:
+    if file_metadata_update.filename != file_metadata.filename:
+
+        if check_if_file_exists_in_db(db, file_metadata_update.filename, file_metadata.path,
+                                      owner_id) or check_if_file_exists_in_disk(file_metadata.path, owner_id,
+                                                                                file_metadata_update.filename, ):
+            raise FileAlreadyExistsException(file_metadata_update.filename)
+
+        file_metadata.filename = file_metadata_update.filename
+
+        if file_metadata.is_dir:
+            pass
+
+    if file_metadata_update.path != file_metadata.path:
+        # file moved
         if check_if_file_exists_in_db(db, file_metadata.filename, file_metadata_update.path, owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
         if check_if_file_exists_in_disk(file_metadata_update.path, owner_id=owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
+        if file_metadata.is_dir:
+            children = get_children_files(db, file_metadata.id, owner_id)
+            for ch in children:
+                pass
+                # update_file(db,
+            # TODO check if works correctly
+        else:
+            pass
         move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=owner_id)
 
         file_metadata.path = file_metadata_update.path
 
-    if file_metadata_update.filename:
-        file_metadata.filename = file_metadata_update.filename
-
     file_metadata.last_modified = datetime.now()
+
     db.commit()
     db.refresh(file_metadata)
+
     return file_metadata
 
 
