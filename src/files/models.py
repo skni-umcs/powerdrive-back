@@ -1,6 +1,6 @@
 from src.database.core import Base
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, BigInteger
 
 from sqlalchemy.orm import relationship
 
@@ -15,7 +15,7 @@ class DbFileMetadata(Base):
 
     type = Column(String(255), nullable=False)
 
-    size = Column(Integer, nullable=False)  # file size in bytes
+    size = Column(BigInteger, nullable=False)  # file size in bytes
 
     is_deleted = Column(Boolean, default=False)
 
