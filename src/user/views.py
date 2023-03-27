@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from src.user.exceptions import UserNotFoundException, UsernameTakenException
+from src.user.exceptions import UserNotFoundException, UsernameTakenException, UserEmailTakenException
 
 from fastapi import APIRouter, Depends, HTTPException
 from src.user.service import add, get_by_index, update, delete_by_index, get_all
@@ -36,16 +36,16 @@ async def get_all_users(db: Session = Depends(get_db)):
 async def add_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         created_user = add(db, user)
-    except UsernameTakenException as e:
+    except (UsernameTakenException, UserEmailTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
     return created_user
 
 
-@api_router.put("/{user_id}", response_model=User, )
+@api_router.put("/{user_id}", response_model=User)
 async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     try:
         update(db, user)
-    except (UserNotFoundException, UsernameTakenException) as e:
+    except (UserNotFoundException, UsernameTakenException, UserEmailTakenException) as e:
         raise HTTPException(status_code=404, detail=str(e))
 
     return user
