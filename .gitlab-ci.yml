@@ -40,6 +40,10 @@ lint:
   allow_failure: true
 
 test:
+  only:
+    - develop
+    - pushes
+    - merge_requests
   services:
     - docker:20.10.16-dind
   variables:
