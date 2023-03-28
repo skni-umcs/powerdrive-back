@@ -1,18 +1,15 @@
-services:
-  - docker:20.10.16-dind
-variables:
-  DOCKER_TLS_CERTDIR: "/certs"
-
 stages:
   - lint
   - test
+  - build
   - deploy
 
 lint:
   stage: lint
-  # only:
-  #   - develop
-  #   - merge_requests
+  only:
+    - develop
+    - pushes
+    - merge_requests
   image: python:latest
   before_script:
     - mkdir -p public/badges public/lint
@@ -43,6 +40,10 @@ lint:
   allow_failure: true
 
 test:
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
   stage: test
 
   image: docker:latest
@@ -56,34 +57,50 @@ test:
 
   allow_failure: true # temporary allow failure for now
 
+build:
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+
+  stage: build
+  image: docker:latest
+  before_script:
+    - docker --version
+  script:
+    - docker build --no-cache .
+  allow_failure: false
+
+
 deploy:
   stage: deploy
   image: debian:latest
   environment:
-    name: development
-    url: https://powerdrive.skni.umcs.pl
+    name: devel
+    url: https://powerdrive.skni.umcs.pl/api/docs
+
   only:
     - develop
-
-  variables:
-    SSH_HOST: "yuumi.skni.umcs.pl"
-    SSH_PORT: "22760"
-    SSH_USER: "gitlab-deploy"
+    - feature/ci-cd
   before_script:
-    # install ssh
-    - apt-get update && apt-get install -y openssh-client
+    - "command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )"
+
+    - eval $(ssh-agent -s)
+
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+
     - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-    # add strinct host key checking
-    - echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-    # - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "echo 'Hello World'"
+    - chmod 700 ~/.ssh
+
+    - ssh-keyscan -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "echo 'TEST CONENCTION'"
+
   script:
-    - echo "Deploying to development server at $SSH_HOST"
-    - ssh $SSH_USER@$SSH_HOST -p $SSH_PORT "cd /home/$SSH_USER/deployment/powerdrive && docker-compose down"
-    - ssh $SSH_USER@$SSH_HOST -p $SSH_PORT "cd /home/$SSH_USER/deployment/powerdrive && git pull"
-    - ssh $SSH_USER@$SSH_HOST -p $SSH_PORT "cd /home/$SSH_USER/deployment/powerdrive && docker build --no-cache ."
-    - ssh $SSH_USER@$SSH_HOST -p $SSH_PORT "cd /home/$SSH_USER/deployment/powerdrivem && docker-compose up -d"
-    - echo "Deployed to development server at $SSH_HOST"
+    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && docker compose -f docker-compose.prod.yml down"
+    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && git pull"
+    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && docker compose -f docker-compose.prod.yml up -d"
+  after_script:
+    - rm -rf ~/.ssh
+
+
   allow_failure: false
