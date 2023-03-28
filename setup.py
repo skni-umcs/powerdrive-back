@@ -6,6 +6,9 @@ from psycopg2 import sql
 from src.config import Settings
 from src.database.core import create_db, check_all_tables
 
+from src.user import service as user_service
+from src.user.exceptions import UserNotFoundException
+
 from src.dependencies import get_db
 
 import src.user as user
@@ -59,13 +62,20 @@ def _create_all_tables_if_needed():
 
 def _create_admin():
     logger.info("##### Creating admin user #####")
-    admin = user.add(get_db().__next__(),
-                     user.UserCreate(username="admin", password="AdminAdmin1#", email="admin@example.com",
-                                     first_name="admin",
-                                     last_name="ADMIN"))
-    session = get_db().__next__()
-    admin.is_admin = True
-    session.commit()
+    # check if admin exists
+    try:
+        admin = user_service.get_by_username(get_db().__next__(), "admin")
+        if admin:
+            logger.info("Admin already exists")
+            return
+    except UserNotFoundException:
+        admin = user.add(get_db().__next__(),
+                         user.UserCreate(username="admin", password="AdminAdmin1#", email="admin@example.com",
+                                         first_name="admin",
+                                         last_name="ADMIN"))
+        session = get_db().__next__()
+        admin.is_admin = True
+        session.commit()
 
 
 def _insert_initial_data():
@@ -73,9 +83,19 @@ def _insert_initial_data():
     logger.info("Inserting initial users for development")
     try:
         for i in range(10):
-            user.add(get_db().__next__(),
-                     user.UserCreate(username=f"test{i}", password="TestTest1!", first_name="test", last_name="test",
-                                     email=f"test{i}@example.com"))
+            try:
+                admin = user_service.get_by_username(get_db().__next__(), f"test{i}")
+                if admin:
+                    logger.info(f"User test{i} already exists")
+                    continue
+
+            except UserNotFoundException:
+                logger.info(f"Creating user test{i}")
+                user.add(get_db().__next__(),
+                         user.UserCreate(username=f"test{i}", password="TestTest1!", first_name="test",
+                                         last_name="test",
+                                         email=f"test{i}@example.com"))
+
     except Exception as e:
         logger.error(e)  # TODO check if users exists
 
@@ -106,6 +126,9 @@ def setup_dev():
 
 
 def setup_prod():
+    _create_all_tables_if_needed()
+    _create_admin()
+    _insert_initial_data()
     logger.warning("setup_prod NOT IMPLEMENTED")
 
 
