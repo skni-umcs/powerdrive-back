@@ -102,7 +102,7 @@ deploy:
   script:
     - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && docker compose -f docker-compose.prod.yml down"
     - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && git pull"
-    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && docker compose -f docker-compose.prod.yml up -d"
+    - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/gitlab-deploy/powerdrive/smaug && docker compose -f docker-compose.prod.yml up --build --force-recreate --no-deps -d"
   after_script:
     - rm -rf ~/.ssh
 
