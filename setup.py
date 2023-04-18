@@ -11,7 +11,7 @@ settings = Settings()
 
 # Import models here for table creation
 from src.user.models import User
-from src.calendar.models import Calendar, Event, ReoccurringEvent, EventsCycle, EventToCycle
+from src.calendar.models import Calendar, Event, ReoccurringEvent, eventIDSeq
 
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
