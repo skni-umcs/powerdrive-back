@@ -20,3 +20,9 @@ class UserValidationException(UserException):
     def __init__(self, message="Given credentials are incorrect"):
         self.message = message
         super().__init__(self.message)
+
+
+class UserEmailTakenException(UserException):
+    def __init__(self, message="User with given email already exists"):
+        self.message = message
+        super().__init__(self.message)
