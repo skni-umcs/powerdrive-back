@@ -31,6 +31,7 @@ def dbevent_to_schema_dict(event: EventModel | ReoccurringEventModel) -> dict:
             "description": event.description,
             "calendar_id": event.calendar_id,
             "organizer_id": event.organizer_id,
+            "block_color": event.block_color,
             "is_reoccurring": True,
             "loop_type": event.loop_type,
             "loop_period": event.loop_period,
@@ -49,6 +50,7 @@ def dbevent_to_schema_dict(event: EventModel | ReoccurringEventModel) -> dict:
             "description": event.description,
             "organizer_id": event.organizer_id,
             "calendar_id": event.calendar_id,
+            "block_color": event.block_color,
             "is_reoccurring": False,
             "loop_type": None,
             "loop_period": None,
@@ -60,8 +62,12 @@ def dbevent_to_schema_dict(event: EventModel | ReoccurringEventModel) -> dict:
 
 
 class CalendarBase(BaseModel):
-    name: str
+    name: str = Field(description="Name of calendar")
     description: str
+
+    block_color: str = Field(description="Color of calendar block in calendar view")
+
+    default: bool = Field(False, description="Is this calendar default for user")
 
 
 class CalendarCreate(CalendarBase):
@@ -96,6 +102,8 @@ class EventBase(BaseModel):
     calendar_id: int
     organizer_id: int
 
+    block_color: str = Field(description="Color of event block in calendar view")
+
     is_reoccurring: bool = False
     loop_type: LoopType | None = None
     loop_period: int | None = Field(None, description="Loop period in days/weeks (depending on loop type)", ge=1)
@@ -109,6 +117,12 @@ class EventBase(BaseModel):
     def duration_validator(cls, v):
         if v < 1:
             raise ValueError('Duration must be greater than 0')
+        return v
+
+    @validator('block_color')
+    def block_color_validator(cls, v):
+        if len(v) != 7 or v[0] != "#" or not all(c in "0123456789abcdef" for c in v[1:]):
+            raise ValueError('Block color must be a valid hex color')
         return v
 
     @validator('loop_type')
