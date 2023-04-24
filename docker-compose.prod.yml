@@ -17,7 +17,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-#    environment:
+    environment:
+      - PD_ROOT_PATH=/api
   db:
     image: postgres
     ports:

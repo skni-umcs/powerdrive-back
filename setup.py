@@ -6,16 +6,28 @@ from psycopg2 import sql
 from src.config import Settings
 from src.database.core import create_db, check_all_tables
 
+from src.user import service as user_service
+from src.user.exceptions import UserNotFoundException
+
+from src.dependencies import get_db
+
+import src.user as user
+
 
 settings = Settings()
 
 # Import models here for table creation
 from src.user.models import User
+
 from src.calendar.models import Calendar, Event, ReoccurringEvent, eventIDSeq
+
+from src.group.models import Group
+
+from src.files.models import DbFileMetadata
 
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 
 def _create_test_database():
@@ -52,21 +64,75 @@ def _create_all_tables_if_needed():
         logger.info("All tables exists. Nothing to do")
 
 
+def _create_admin():
+    logger.info("##### Creating admin user #####")
+    # check if admin exists
+    try:
+        admin = user_service.get_by_username(get_db().__next__(), "admin")
+        if admin:
+            logger.info("Admin already exists")
+            return
+    except UserNotFoundException:
+        admin = user.add(get_db().__next__(),
+                         user.UserCreate(username="admin", password="AdminAdmin1#", email="admin@example.com",
+                                         first_name="admin",
+                                         last_name="ADMIN"))
+        session = get_db().__next__()
+        admin.is_admin = True
+        session.commit()
+
+
+def _insert_initial_data():
+    logger.info("##### Inserting initial data #####")
+    logger.info("Inserting initial users for development")
+    try:
+        for i in range(10):
+            try:
+                admin = user_service.get_by_username(get_db().__next__(), f"test{i}")
+                if admin:
+                    logger.info(f"User test{i} already exists")
+                    continue
+
+            except UserNotFoundException:
+                logger.info(f"Creating user test{i}")
+                user.add(get_db().__next__(),
+                         user.UserCreate(username=f"test{i}", password="TestTest1!", first_name="test",
+                                         last_name="test",
+                                         email=f"test{i}@example.com"))
+
+    except Exception as e:
+        logger.error(e)  # TODO check if users exists
+
+
+def _create_root_dir_for_files():
+    if settings.base_file_path:
+        logger.info(f"Creating root dir {settings.base_file_path}")
+        import os
+        os.makedirs(settings.base_file_path, exist_ok=True)
+
+    if settings.base_file_path_trash:
+        logger.info(f"Creating root dir {settings.base_file_path_trash}")
+        import os
+        os.makedirs(settings.base_file_path_trash, exist_ok=True)
+
+
 def setup_test():
     _create_test_database()
     _create_all_tables_if_needed()
-
-
-def _create_admin():
-    logger.warning("_create_admin NOT IMPLEMENTED")
+    # _create_root_dir_for_files()
 
 
 def setup_dev():
     _create_all_tables_if_needed()
     _create_admin()
+    _insert_initial_data()
+    # _create_root_dir_for_files()
 
 
 def setup_prod():
+    _create_all_tables_if_needed()
+    _create_admin()
+    _insert_initial_data()
     logger.warning("setup_prod NOT IMPLEMENTED")
 
 
@@ -79,6 +145,9 @@ if __name__ == "__main__":
         elif sys.argv[1] == "prod":
             setup_prod()
         else:
-            print("Invalid argument")
+            logger.error("Unknown argument")
+            # print("Invalid argument")
     else:
-        print("Missing argument")
+        logger.error("No argument")
+        # print("Missing argument")
+        pass
