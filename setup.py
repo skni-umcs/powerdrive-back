@@ -13,12 +13,16 @@ from src.dependencies import get_db
 
 import src.user as user
 
-# from
 
 settings = Settings()
 
+# Import models here for table creation
 from src.user.models import User
+
+from src.calendar.models import Calendar, Event, ReoccurringEvent, eventIDSeq
+
 from src.group.models import Group
+
 from src.files.models import DbFileMetadata
 
 # logging.basicConfig(level=logging.INFO)
