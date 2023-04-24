@@ -21,17 +21,20 @@ eventIDSeq = Sequence('event_id_seq', start=1, increment=1, metadata=Base.metada
 
 
 class Calendar(Base):
-    __tablename__ = 'Calendar'
+    __tablename__ = 'pd_calendar'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     description = Column(String(500), nullable=False)
 
-    owner_id = Column(Integer, ForeignKey('User.id'), nullable=False)
+    block_color = Column(String(7), nullable=False, default='#000000')
+
+    owner_id = Column(Integer, ForeignKey('pd_user.id'), nullable=False)
+    default = Column(Boolean, nullable=False, default=False)
 
 
 class Event(Base):
-    __tablename__ = 'Event'
+    __tablename__ = 'pd_event'
 
     id = Column(Integer, eventIDSeq, primary_key=True)
     name = Column(String(100), nullable=False)
@@ -40,12 +43,14 @@ class Event(Base):
     duration = Column(Integer, nullable=False)
     description = Column(String(100), nullable=False)
 
-    organizer_id = Column(Integer, ForeignKey('User.id'), nullable=False)
-    calendar_id = Column(Integer, ForeignKey('Calendar.id'), nullable=False)
+    block_color = Column(String(7), nullable=False, default='#000000')
+
+    organizer_id = Column(Integer, ForeignKey('pd_user.id'), nullable=False)
+    calendar_id = Column(Integer, ForeignKey('pd_calendar.id'), nullable=False)
 
 
 class ReoccurringEvent(Base):
-    __tablename__ = 'ReoccurringEvent'
+    __tablename__ = 'pd_reoccurring_event'
 
     id = Column(Integer, eventIDSeq, primary_key=True)
     name = Column(String(100), nullable=False)
@@ -54,6 +59,8 @@ class ReoccurringEvent(Base):
     duration = Column(Integer, nullable=False)
     end_date = Column(DateTime, nullable=False)
     description = Column(String(100), nullable=False)
+
+    block_color = Column(String(7), nullable=False, default='#000000')
 
     loop_type = Column(Enum(LoopType), nullable=False)
     loop_period = Column(Integer, nullable=False)
@@ -69,33 +76,5 @@ class ReoccurringEvent(Base):
     day_of_month = Column(Integer, nullable=True)
     month_of_year = Column(Integer, nullable=True)
 
-    organizer_id = Column(Integer, ForeignKey('User.id'), nullable=False)
-    calendar_id = Column(Integer, ForeignKey('Calendar.id'), nullable=False)
-
-
-# class EventsGroup(Base):
-#     __tablename__ = 'EventsCycle'
-#
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     name = Column(String(100), nullable=False)
-#     # start_date = Column(DateTime, nullable=False)
-#     # end_date = Column(DateTime, nullable=False)
-#     description = Column(String(100), nullable=False)
-#
-#     organizer_id = Column(Integer, ForeignKey('User.id'), nullable=False)
-
-
-# class EventToGroup(Base):
-#     __tablename__ = 'EventToCycle'
-#
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     event_id = Column(Integer, ForeignKey('Event.id'), nullable=False)
-#     cycle_id = Column(Integer, ForeignKey('EventsCycle.id'), nullable=False)
-#
-#
-# class ReoccurringEventToGroup(Base):
-#     __tablename__ = 'ReoccurringEventToCycle'
-#
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     reoccurrence_id = Column(Integer, ForeignKey('ReoccurringEvent.id'), nullable=False)
-#     cycle_id = Column(Integer, ForeignKey('EventsCycle.id'), nullable=False)
+    organizer_id = Column(Integer, ForeignKey('pd_user.id'), nullable=False)
+    calendar_id = Column(Integer, ForeignKey('pd_calendar.id'), nullable=False)

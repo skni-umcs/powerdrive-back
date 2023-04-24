@@ -47,3 +47,9 @@ class EventAlreadyExistsException(EventException):
     """Raised when the event already exists."""
     def __init__(self, message: str = "Event already exists", status_code: int = status.HTTP_400_BAD_REQUEST, headers: dict = None):
         super().__init__(message=message, status_code=status_code, headers=headers)
+
+
+class DefaultCalendarException(CalendarException):
+    """Raised when the user tries to delete or update the default calendar."""
+    def __init__(self, message: str = "Default calendar cannot be modified", status_code: int = status.HTTP_400_BAD_REQUEST, headers: dict = None):
+        super().__init__(message=message, status_code=status_code, headers=headers)

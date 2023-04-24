@@ -11,7 +11,7 @@ from .models import Calendar as CalendarModel
 from .models import Event as EventModel
 from .models import ReoccurringEvent as ReoccurringEventModel
 from .models import LoopType
-from .exceptions import CalendarNameTakenException, EventAlreadyExistsException
+from .exceptions import CalendarNameTakenException, EventAlreadyExistsException, DefaultCalendarException
 
 
 def event_to_model(event: EventBaseSchema) -> EventModel | ReoccurringEventModel:
@@ -102,12 +102,20 @@ def get_calendar(db: Session, calendar_id: int) -> CalendarModel:
 
 
 def get_user_calendars(db: Session, user_id: int) -> list[CalendarModel]:
-    return db.query(CalendarModel) \
+    calendars = db.query(CalendarModel) \
         .filter(CalendarModel.owner_id == user_id) \
         .all()
+    if not calendars:
+        create_default_calendar(db, user_id)
+        calendars = db.query(CalendarModel) \
+            .filter(CalendarModel.owner_id == user_id) \
+            .all()
+    return calendars
 
 
 def create_calendar(db: Session, calendar: CalendarCreate, user_id: int) -> CalendarModel:
+    if calendar.default:
+        raise DefaultCalendarException()
     existing = db.query(CalendarModel) \
         .filter(CalendarModel.owner_id == user_id) \
         .filter(CalendarModel.name == calendar.name) \
@@ -122,10 +130,22 @@ def create_calendar(db: Session, calendar: CalendarCreate, user_id: int) -> Cale
     return db_calendar
 
 
+def create_default_calendar(db: Session, user_id: int) -> CalendarModel:
+    db_calendar = CalendarModel(name='Default', description='Default calendar')
+    db_calendar.owner_id = user_id
+    db_calendar.default = True
+    db.add(db_calendar)
+    db.commit()
+    db.refresh(db_calendar)
+    return db_calendar
+
+
 def update_calendar(db: Session, calendar: CalendarUpdate):
     db_calendar = db.query(CalendarModel) \
         .filter(CalendarModel.id == calendar.id) \
         .first()
+    if calendar.default:
+        raise DefaultCalendarException()
     conflicting = db.query(CalendarModel) \
         .filter(CalendarModel.owner_id == db_calendar.owner_id) \
         .filter(CalendarModel.name == calendar.name) \
@@ -141,6 +161,9 @@ def update_calendar(db: Session, calendar: CalendarUpdate):
 
 
 def delete_calendar(db: Session, calendar_id: int):
+    calendar = get_calendar(db, calendar_id)
+    if calendar.default:
+        raise DefaultCalendarException()
     delete_calendar_events(db, calendar_id)
     db_calendar = db.query(CalendarModel) \
         .filter(CalendarModel.id == calendar_id) \
