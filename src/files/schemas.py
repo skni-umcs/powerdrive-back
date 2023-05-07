@@ -27,7 +27,10 @@ class FileMetadataBase(BaseModel):
             raise ValueError('Path must not end with /')
 
         if '//' in v:
-            raise ValueError('Path must not contain //')
+            raise ValueError('Path must not contain multiple slashes')
+
+        if '..' in v:
+            raise ValueError('Path must not contain ..')
 
         return v
 

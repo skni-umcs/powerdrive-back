@@ -320,6 +320,8 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
             raise FileAlreadyExistsException(file_metadata_update.filename)
 
         file_metadata.filename = file_metadata_update.filename
+        # rename file on disk
+        move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=owner_id)
 
         if file_metadata.is_dir:
             pass
