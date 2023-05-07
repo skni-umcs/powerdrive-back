@@ -39,3 +39,10 @@ drop_db:
 	docker compose down
 
 	sudo rm -rf ./db_data
+
+# make new_migration name="migration name"
+new_migration:
+	docker compose run --rm $(MAIN_CONTAINER) alembic revision --autogenerate -m "$(name)"
+
+migration:
+	docker compose run --rm $(MAIN_CONTAINER) alembic upgrade head
