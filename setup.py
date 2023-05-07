@@ -116,21 +116,35 @@ def _create_root_dir_for_files():
         os.makedirs(settings.base_file_path_trash, exist_ok=True)
 
 
+def _run_migrations():
+    logger.info("##### Running migrations #####")
+    import alembic.config
+    alembic_args = [
+        "--raiseerr",
+        "upgrade",
+        "head"
+    ]
+    alembic.config.main(argv=alembic_args)
+
+
 def setup_test():
-    _create_test_database()
-    _create_all_tables_if_needed()
+    logger.info("##### Setting up test #####")
+    # _create_test_database()
+    # _create_all_tables_if_needed()
     # _create_root_dir_for_files()
 
 
 def setup_dev():
-    _create_all_tables_if_needed()
+    # _create_all_tables_if_needed()
+    _run_migrations()
     _create_admin()
     _insert_initial_data()
     # _create_root_dir_for_files()
 
 
 def setup_prod():
-    _create_all_tables_if_needed()
+    # _create_all_tables_if_needed()
+    _run_migrations()
     _create_admin()
     _insert_initial_data()
     logger.warning("setup_prod NOT IMPLEMENTED")
