@@ -6,6 +6,7 @@ from src.group.views import api_router as group_router
 from src.auth.views import api_router as auth_router
 from src.admin.views import api_router as admin_router
 from src.files.views import api_router as file_router
+from src.sharefiles.views import api_router as share_file_router
 
 from src.config import Settings
 
@@ -39,6 +40,7 @@ app.include_router(group_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(file_router)
+app.include_router(share_file_router)
 
 
 @app.get("/health")

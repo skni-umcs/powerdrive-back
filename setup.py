@@ -20,7 +20,7 @@ settings = Settings()
 from src.user.models import User
 from src.group.models import Group
 from src.files.models import DbFileMetadata
-
+from src.sharefiles.models import ShareFileUser
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
