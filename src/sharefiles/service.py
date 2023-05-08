@@ -35,11 +35,21 @@ def get_by_id(current_user: User, share_id: int, db: Session) -> ShareFileUser:
     return db_share
 
 
-def get_all(current_user: User, db: Session) -> [ShareFileUser]:
-    return db.query(ShareFileUser).all()
 
 def get_all_for_user(current_user: User, db: Session) -> [ShareFileUser]:
     return db.query(ShareFileUser).filter(ShareFileUser.user_id == current_user.id).all()
+
+
+def get_all_for_file(file_id: int, current_user: User, db: Session) -> [ShareFileUser]:
+    db_file = db.query(ShareFileUser).filter(ShareFileUser.user_id == current_user.id
+                                             and ShareFileUser.file_id == file_id).all()
+
+    if not db_file:
+        raise FileNotFoundException()
+
+    shares = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id).all()
+    return shares
+
 
 
 def get_for_user(current_user: User, file_id: int,  db: Session) -> ShareFileUser:
@@ -47,14 +57,13 @@ def get_for_user(current_user: User, file_id: int,  db: Session) -> ShareFileUse
                                              and ShareFileUser.file_id == file_id).all()
 
     if not db_file:
-        raise FileNotFoundException
+        raise FileNotFoundException()
     return db_file
 
 
 def update(current_user: User, share: ShareFileUserUpdate, db: Session) -> ShareFileUser:
     db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == share.file_id).first()
     if not db_file:
-        print('file not found')
         raise FileNotFoundException()
     if db_file.owner_id != current_user.id:
         raise NotAuthorizedShareFileException()
