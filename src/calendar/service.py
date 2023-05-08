@@ -231,6 +231,7 @@ def update_event(db: Session, event: EventUpdate):
     db_event.name = event.name
     db_event.place = event.place
     db_event.description = event.description
+    db_event.block_color = event.block_color
     db_event.start_date = event.start_date
     db_event.duration = event.duration
     db_event.calendar_id = event.calendar_id
