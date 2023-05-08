@@ -30,6 +30,7 @@ def event_to_model(event: EventBaseSchema) -> EventModel | ReoccurringEventModel
             duration=event.duration,
             end_date=event.end_date,
             description=event.description,
+            block_color=event.block_color,
             loop_type=event.loop_type,
             loop_period=event.loop_period,
             monday=WEEKDAYS[0] in event.reoccurring_days,
@@ -52,6 +53,7 @@ def event_to_model(event: EventBaseSchema) -> EventModel | ReoccurringEventModel
             start_date=event.start_date,
             duration=event.duration,
             description=event.description,
+            block_color=event.block_color,
             organizer_id=event.organizer_id,
             calendar_id=event.calendar_id,
         )
