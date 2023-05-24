@@ -35,7 +35,7 @@ def get_by_id(current_user: User, share_id: int, db: Session) -> ShareFileUser:
     db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == db_share.file_id).first()
     if not db_file:
         raise FileNotFoundException()
-    if db_share.user_id != current_user.id or db_share.db_file.owner_id != current_user.id:
+    if db_share.user_id != current_user.id and db_file.owner_id != current_user.id:
         raise NotAuthorizedShareFileException()
     return db_share
 
@@ -59,7 +59,7 @@ def update(current_user: User, share: ShareFileUserUpdate, db: Session) -> Share
     db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == share.file_id).first()
     if not db_file:
         raise FileNotFoundException()
-    if db_file.owner_id != current_user.id or share.user_id != current_user.id:
+    if db_file.owner_id != current_user.id and share.user_id != current_user.id:
         raise NotAuthorizedShareFileException()
     db_share = db.query(ShareFileUser).filter(ShareFileUser.id == share.id).first()
     if not db_share:
