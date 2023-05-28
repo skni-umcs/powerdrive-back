@@ -8,6 +8,9 @@ from alembic import context
 from src.user.models import User
 from src.group.models import Group
 from src.files.models import DbFileMetadata
+from src.calendar.models import Calendar, Event, ReoccurringEvent, eventIDSeq
+from src.usersettings.models import DbUserSettings
+from src.sharefiles.models import ShareFileUser
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
