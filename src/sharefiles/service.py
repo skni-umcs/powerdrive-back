@@ -46,7 +46,7 @@ def get_all_for_user(current_user: User, db: Session) -> [ShareFileUser]:
 
 
 def get_all_for_file(file_id: int, current_user: User, db: Session) -> [ShareFileUser]:
-    db_file = db.query(DbFileMetadata).filter(DbFileMetadata.file_id == file_id).first()
+    db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id).first()
 
     if not db_file:
         raise FileNotFoundException()
