@@ -27,6 +27,7 @@ from src.files.models import DbFileMetadata
 
 from src.usersettings.models import DbUserSettings
 
+from src.sharefiles.models import ShareFileUser
 # logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
