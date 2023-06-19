@@ -112,7 +112,7 @@ async def download_file(file_id: int, db: Session = Depends(get_db), current_use
     if file_.is_dir:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't download directory (yet)")
 
-    return FileResponse(get_base_path_for_user(current_user.id) + file_.path + "/" + file_.filename,
+    return FileResponse(get_base_path_for_user(file_.owner_id) + file_.path + "/" + file_.filename,
                         filename=file_.filename,
                         media_type=file_.type)
 

@@ -17,6 +17,8 @@ import os
 
 import logging
 
+from src.sharefiles.models import ShareFileUser
+
 logger = logging.getLogger(__name__)
 
 settings = Settings()
@@ -162,10 +164,10 @@ def get_file_metadata_by_id(db: Session, file_id: int, owner_id: int) -> DbFileM
     :return: DbFileMetadata object of file
     """
     file_metadata = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
-                                                    DbFileMetadata.is_deleted == False,
-                                                    DbFileMetadata.owner_id == owner_id).first()
-
+                                                    DbFileMetadata.is_deleted == False).first()
     if not file_metadata:
+        raise FileNotFoundException(file_id)
+    if get_read_rights(db, file_metadata.id, owner_id) is False:
         raise FileNotFoundException(file_id)
 
     return file_metadata
@@ -217,11 +219,13 @@ def delete_file(db: Session, file_metadata: DbFileMetadata, owner_id: int):
     :param owner_id: id of user
     :return: None
     """
+
     file_metadata.is_deleted = True
 
     if not file_metadata.is_dir:
         move_file_to_trash(file_metadata.filename, file_metadata.path, owner_id)
-
+        shares = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_metadata.id).all()
+        db.delete(shares)
     db.commit()
 
 
@@ -242,6 +246,8 @@ def delete_dir(db: Session, file_metadata: DbFileMetadata, owner_id: int):
             delete_dir(db, child, owner_id)
         else:
             delete_file(db, child, owner_id)
+    shares = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_metadata.id).all()
+    db.delete(shares)
 
     db.commit()
     os.rmdir(get_path_for_file(owner_id, file_metadata.path))
@@ -308,6 +314,8 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
     :return: DbFileMetadata object of updated file
     """
     file_metadata = get_file_metadata_by_id(db, file_metadata_update.id, owner_id)
+    if get_write_rights(db, file_metadata.id, owner_id) is False:
+        raise FileNotFoundException(file_metadata_update.id)
 
     if file_metadata_update.is_dir and not file_metadata.is_dir:
         raise FileIsNotDirException(file_metadata.filename)
@@ -315,34 +323,34 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
     if file_metadata_update.filename != file_metadata.filename:
 
         if check_if_file_exists_in_db(db, file_metadata_update.filename, file_metadata.path,
-                                      owner_id) or check_if_file_exists_in_disk(file_metadata.path, owner_id,
+                                      owner_id) or check_if_file_exists_in_disk(file_metadata.path, file_metadata.owner_id,
                                                                                 file_metadata_update.filename, ):
             raise FileAlreadyExistsException(file_metadata_update.filename)
 
         file_metadata.filename = file_metadata_update.filename
         # rename file on disk
-        move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=owner_id)
+        move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=file_metadata.owner_id)
 
         if file_metadata.is_dir:
             pass
 
     if file_metadata_update.path != file_metadata.path:
         # file moved
-        if check_if_file_exists_in_db(db, file_metadata.filename, file_metadata_update.path, owner_id):
+        if check_if_file_exists_in_db(db, file_metadata.filename, file_metadata_update.path, file_metadata.owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
-        if check_if_file_exists_in_disk(file_metadata_update.path, owner_id=owner_id):
+        if check_if_file_exists_in_disk(file_metadata_update.path, owner_id=file_metadata.owner_id):
             raise FileAlreadyExistsException(file_metadata_update.path)
 
         if file_metadata.is_dir:
-            children = get_children_files(db, file_metadata.id, owner_id)
+            children = get_children_files(db, file_metadata.id, file_metadata.owner_id)
             for ch in children:
                 pass
                 # update_file(db,
             # TODO check if works correctly
         else:
             pass
-        move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=owner_id)
+        move_file_on_disk(file_metadata.path, file_metadata_update.path, owner_id=file_metadata.owner_id)
 
         file_metadata.path = file_metadata_update.path
 
@@ -368,6 +376,8 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
     """
 
     file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
+    # if get_write_rights(db, file_metadata.id, owner_id) is False:
+    #     raise FileNotFoundException(file_id)
 
     if file_metadata.is_dir:
         raise DirException(file_metadata.path)
@@ -376,6 +386,7 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
 
     file_metadata.size = size
     file_metadata.content_type = file_data.content_type
+    file_metadata.last_modified = datetime.now()
 
     db.commit()
     db.refresh(file_metadata)
@@ -447,3 +458,79 @@ def get_dir_tree(db: Session, owner_id: int) -> OnlyDirectory:
     children = pom2(db, root_dir, owner_id, True)
 
     return children
+
+
+def get_read_rights(db: Session, file_id: int, user_id: int):
+    file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                           DbFileMetadata.is_deleted == False,).first()
+    if file:
+        if file.owner_id == user_id:
+            return True
+        else:
+            share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
+                                                    ShareFileUser.user_id == user_id,).first()
+            if share:
+                if share.read:
+                    return True
+            else:
+
+                if file.parent_id is not None:
+                    return get_write_rights(db, file.parent_id, user_id)
+    return False
+
+
+def get_write_rights(db: Session, file_id: int, user_id: int):
+    file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                           DbFileMetadata.is_deleted == False,).first()
+    if file:
+        if file.owner_id == user_id:
+            return True
+        else:
+            share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
+                                                    ShareFileUser.user_id == user_id,).first()
+            if share:
+                if share.write:
+                    return True
+            else:
+                if file.parent_id is not None:
+                     return get_write_rights(db, file.parent_id, user_id)
+    return False
+
+
+def get_delete_rights(db: Session, file_id: int, user_id: int):
+    file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                           DbFileMetadata.is_deleted == False,).first()
+    if file:
+        if file.owner_id == user_id:
+            return True
+        else:
+            share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
+                                                    ShareFileUser.user_id == user_id,).first()
+            if share:
+                if share.delete:
+                    return True
+            else:
+                if file.parent_id is not None:
+                    return get_write_rights(db, file.parent_id, user_id)
+    return False
+
+
+def get_share_rights(db: Session, file_id: int, user_id: int):
+    file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                           DbFileMetadata.is_deleted == False,).first()
+    if file:
+        if file.owner_id == user_id:
+            return True
+        else:
+            share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
+                                                    ShareFileUser.user_id == user_id,).first()
+            if share:
+                if share.share:
+                    return True
+            else:
+                if file.parent_id is not None:
+                    return get_write_rights(db, file.parent_id, user_id)
+    return False
+
+
+
