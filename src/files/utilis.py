@@ -97,7 +97,7 @@ def save_file_to_disk(file_data, virtual_path: str, owner_id: id) -> int:
     """
     os.makedirs(os.path.dirname(get_path_for_file(owner_id, virtual_path) + '/'), exist_ok=True)
 
-    with open(get_path_for_file(owner_id, virtual_path) + '/' + file_data.filename, "a+b") as buffer:
+    with open(get_path_for_file(owner_id, virtual_path) + '' + file_data.filename, "w+b") as buffer:
         by = buffer.write(file_data.file.read())
 
     return by

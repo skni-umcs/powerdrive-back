@@ -16,7 +16,7 @@ from src.config import Settings
 import os
 
 import logging
-
+from src.sharefiles.models import ShareFileUser
 logger = logging.getLogger(__name__)
 
 settings = Settings()
@@ -550,8 +550,6 @@ def get_dir_tree(db: Session, owner_id: int) -> OnlyDirectory:
     children = pom2(db, root_dir, owner_id, True)
 
     return children
-
-
 
 
 def get_read_rights(db: Session, file_id: int, user_id: int):
