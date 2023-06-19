@@ -17,8 +17,6 @@ import os
 
 import logging
 
-from src.sharefiles.models import ShareFileUser
-
 logger = logging.getLogger(__name__)
 
 settings = Settings()
@@ -397,34 +395,42 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
     :param owner_id: id of user
     :return: DbFileMetadata object of updated file
     """
-    file_metadata = get_file_metadata_by_id(db, file_metadata_update.id, owner_id)
-    if get_write_rights(db, file_metadata.id, owner_id) is False:
+    if get_write_rights(db, file_metadata_update.id, owner_id) is False:
         raise FileNotFoundException(file_metadata_update.id)
+    file_metadata = get_file_metadata_by_id(db, file_metadata_update.id, owner_id)
+
 
     ### CHECK IF NEW NAME
 
+    if file_metadata_update.filename != file_metadata.filename:
+
+        if check_if_file_exists_in_db(db, file_metadata_update.filename, file_metadata.path,
+                                      owner_id) or check_if_file_exists_in_disk(file_metadata.path, file_metadata.owner_id,
+                                                                                file_metadata_update.filename, ):
+            raise FileAlreadyExistsException(file_metadata_update.filename)
+
     if file_metadata_update.filename != file_metadata.filename or file_metadata_update.path != file_metadata.path:
-        if check_if_file_exists_in_db(db, file_metadata_update.path, file_metadata_update.filename, owner_id):
+        if check_if_file_exists_in_db(db, file_metadata_update.path, file_metadata_update.filename, file_metadata.owner_id):
             raise FileAlreadyExistsException(file_metadata_update.filename)
 
         if file_metadata.is_dir:
 
-            move_dir(db, file_metadata, file_metadata_update, owner_id)
+            move_dir(db, file_metadata, file_metadata_update, file_metadata.owner_id)
             # create_needed_dirs_in_db(db, file_metadata_update.path, owner_id)
 
             # move_dir_on_disk(file_metadata.path, file_metadata_update.path, owner_id)
 
         else:
-            create_needed_dirs_in_db(db, file_metadata_update.path, owner_id)
+            create_needed_dirs_in_db(db, file_metadata_update.path, file_metadata.owner_id)
 
             # move file on disk
 
             move_file_on_disk(file_metadata.path + "/" + file_metadata.filename,
-                              file_metadata_update.path + "/" + file_metadata_update.filename, owner_id)
+                              file_metadata_update.path + "/" + file_metadata_update.filename, file_metadata.owner_id)
 
             parent_id = db.query(DbFileMetadata.id).filter(DbFileMetadata.path == file_metadata_update.path,
                                                            DbFileMetadata.is_dir == True,
-                                                           DbFileMetadata.owner_id == owner_id
+                                                           DbFileMetadata.owner_id == file_metadata.owner_id
                                                            ).first().id
 
             file_metadata.parent_id = parent_id
@@ -457,10 +463,10 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
     :param owner_id: id of user
     :return: DbFileMetadata object of file
     """
-
-    file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
-    if get_write_rights(db, file_metadata.id, owner_id) is False:
+    if get_write_rights(db, file_id, owner_id) is False:
         raise FileNotFoundException(file_id)
+    file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
+
 
     if file_metadata.is_dir:
         raise DirException(file_metadata.path)
@@ -546,6 +552,8 @@ def get_dir_tree(db: Session, owner_id: int) -> OnlyDirectory:
     return children
 
 
+
+
 def get_read_rights(db: Session, file_id: int, user_id: int):
     file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
                                            DbFileMetadata.is_deleted == False,).first()
@@ -561,7 +569,7 @@ def get_read_rights(db: Session, file_id: int, user_id: int):
             else:
 
                 if file.parent_id is not None:
-                    return get_write_rights(db, file.parent_id, user_id)
+                    return get_read_rights(db, file.parent_id, user_id)
     return False
 
 
@@ -575,7 +583,7 @@ def get_write_rights(db: Session, file_id: int, user_id: int):
             share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
                                                     ShareFileUser.user_id == user_id,).first()
             if share:
-                if share.write:
+                if share.write and share.read:
                     return True
             else:
                 if file.parent_id is not None:
@@ -593,11 +601,11 @@ def get_delete_rights(db: Session, file_id: int, user_id: int):
             share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
                                                     ShareFileUser.user_id == user_id,).first()
             if share:
-                if share.delete:
+                if share.delete and share.read and share.write:
                     return True
             else:
                 if file.parent_id is not None:
-                    return get_write_rights(db, file.parent_id, user_id)
+                    return get_delete_rights(db, file.parent_id, user_id)
     return False
 
 
@@ -611,12 +619,14 @@ def get_share_rights(db: Session, file_id: int, user_id: int):
             share = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_id,
                                                     ShareFileUser.user_id == user_id,).first()
             if share:
-                if share.share:
+                if share.share and share.read:
                     return True
             else:
                 if file.parent_id is not None:
-                    return get_write_rights(db, file.parent_id, user_id)
+                    return get_share_rights(db, file.parent_id, user_id)
     return False
+
+
 
 
 def check_if_access_to_delete_folder(db: Session, file_id: int, user_id: int):
