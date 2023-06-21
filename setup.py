@@ -131,17 +131,6 @@ def _run_migrations():
     alembic.config.main(argv=alembic_args)
 
 
-def _run_migrations():
-    logger.info("##### Running migrations #####")
-    import alembic.config
-    alembic_args = [
-        "--raiseerr",
-        "upgrade",
-        "head"
-    ]
-    alembic.config.main(argv=alembic_args)
-
-
 def setup_test():
     logger.info("##### Setting up test #####")
     # _create_test_database()
