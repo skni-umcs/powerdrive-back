@@ -32,5 +32,4 @@ starlette==0.22.0
 tomli==2.0.1
 typing_extensions==4.4.0
 uvicorn==0.20.0
-
-alembic~=1.10.4
+alembic==1.11.1
