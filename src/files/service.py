@@ -225,7 +225,8 @@ def delete_file(db: Session, file_metadata: DbFileMetadata, owner_id: int):
     if not file_metadata.is_dir:
         move_file_to_trash(file_metadata.filename, file_metadata.path, owner_id)
         shares = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_metadata.id).all()
-        db.delete(shares)
+        for s in shares:
+            db.delete(s)
     db.commit()
 
 
@@ -247,7 +248,8 @@ def delete_dir(db: Session, file_metadata: DbFileMetadata, owner_id: int):
         else:
             delete_file(db, child, owner_id)
     shares = db.query(ShareFileUser).filter(ShareFileUser.file_id == file_metadata.id).all()
-    db.delete(shares)
+    for s in shares:
+        db.delete(s)
 
     db.commit()
     os.rmdir(get_path_for_file(owner_id, file_metadata.path))
@@ -263,10 +265,13 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
     """
     file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
 
+    if get_delete_rights(db, file_metadata.id, owner_id) is False:
+        raise FileNotFoundException(file_id)
+
     if file_metadata.is_dir:
-        delete_dir(db, file_metadata, owner_id)
+        delete_dir(db, file_metadata, file_metadata.owner_id)
     else:
-        delete_file(db, file_metadata, owner_id)
+        delete_file(db, file_metadata, file_metadata.owner_id)
 
 
 def move_file_on_disk(old_path, new_path, owner_id):
@@ -376,13 +381,13 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
     """
 
     file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
-    # if get_write_rights(db, file_metadata.id, owner_id) is False:
-    #     raise FileNotFoundException(file_id)
+    if get_write_rights(db, file_metadata.id, owner_id) is False:
+        raise FileNotFoundException(file_id)
 
     if file_metadata.is_dir:
         raise DirException(file_metadata.path)
 
-    size = save_file_to_disk(file_data, file_metadata.path, owner_id=owner_id)
+    size = save_file_to_disk(file_data, file_metadata.path, owner_id=file_metadata.owner_id)
 
     file_metadata.size = size
     file_metadata.content_type = file_data.content_type
