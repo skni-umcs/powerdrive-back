@@ -4,8 +4,17 @@ from src.files.models import DbFileMetadata
 from src.sharefiles.models import ShareFileUser
 from src.sharefiles.schemas import ShareFileUserCreate, ShareFileUserUpdate
 from src.user.schemas import User
-from src.sharefiles.exceptions import FileNotFoundException, NotAuthorizedShareFileException, ShareFileNotFoundException
+from src.sharefiles.exceptions import FileNotFoundException, NotAuthorizedShareFileException,\
+ShareFileNotFoundException, ShareFileWrongPermissionException
 
+def check_if_permissions_correct(share: ShareFileUserCreate | ShareFileUserUpdate):
+    if share.write and not share.read:
+        return False
+    if share.delete and not share.write:
+        return False
+    if share.share and not share.read:
+        return False
+    return True
 
 def add(current_user: User, share: ShareFileUserCreate, db: Session) -> ShareFileUser:
     db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == share.file_id).first()
@@ -13,6 +22,9 @@ def add(current_user: User, share: ShareFileUserCreate, db: Session) -> ShareFil
         raise FileNotFoundException()
     if db_file.owner_id != current_user.id:
         raise NotAuthorizedShareFileException()
+
+    if not check_if_permissions_correct(share):
+        raise ShareFileWrongPermissionException()
 
     db_share = ShareFileUser(
         file_id=share.file_id,
@@ -59,11 +71,14 @@ def update(current_user: User, share: ShareFileUserUpdate, db: Session) -> Share
     db_file = db.query(DbFileMetadata).filter(DbFileMetadata.id == share.file_id).first()
     if not db_file:
         raise FileNotFoundException()
-    if db_file.owner_id != current_user.id and share.user_id != current_user.id:
+    if db_file.owner_id != current_user.id:
         raise NotAuthorizedShareFileException()
     db_share = db.query(ShareFileUser).filter(ShareFileUser.id == share.id).first()
     if not db_share:
         raise ShareFileNotFoundException()
+
+    if not check_if_permissions_correct(share):
+        raise ShareFileWrongPermissionException()
 
     db_share.read = share.read
     db_share.write = share.write

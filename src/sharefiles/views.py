@@ -6,7 +6,8 @@ from src.dependencies import get_db
 from src.sharefiles.schemas import ShareFileUser, ShareFileUserCreate, ShareFileUserUpdate
 from src.user.schemas import User
 from src.sharefiles import service
-from src.sharefiles.exceptions import NotAuthorizedShareFileException, FileNotFoundException, ShareFileNotFoundException
+from src.sharefiles.exceptions import NotAuthorizedShareFileException, FileNotFoundException, \
+    ShareFileNotFoundException, ShareFileWrongPermissionException
 
 
 api_router = APIRouter(prefix="/share/file", tags=["sharefile"])
@@ -21,6 +22,8 @@ def add_share(share: ShareFileUserCreate, current_user: User = Depends(get_curre
         raise HTTPException(status_code=401, detail=str(e))
     except FileNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ShareFileWrongPermissionException as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @api_router.get("/me", response_model=list[ShareFileUser])
@@ -39,6 +42,8 @@ async def update_share(share: ShareFileUserUpdate,
         raise HTTPException(status_code=404, detail=str(e))
     except ShareFileNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ShareFileWrongPermissionException as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @api_router.get("/{share_id}", response_model=ShareFileUser)

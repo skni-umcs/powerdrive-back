@@ -269,6 +269,8 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
         raise FileNotFoundException(file_id)
 
     if file_metadata.is_dir:
+        if check_if_access_to_delete_folder(db, file_metadata.id, owner_id) is False:
+            raise FileNotFoundException(file_id)
         delete_dir(db, file_metadata, file_metadata.owner_id)
     else:
         delete_file(db, file_metadata, file_metadata.owner_id)
@@ -538,4 +540,19 @@ def get_share_rights(db: Session, file_id: int, user_id: int):
     return False
 
 
+def check_if_access_to_delete_folder(db: Session, file_id: int, user_id: int):
+    file = db.query(DbFileMetadata).filter(DbFileMetadata.id == file_id,
+                                           DbFileMetadata.is_deleted == False,).first()
 
+    if file:
+        if file.is_dir and file.deleted == False:
+            if get_delete_rights(db, file_id, user_id):
+                children = get_children(db, file_id, user_id)
+                for child in children:
+                    if not check_if_access_to_delete_folder(db, child.id, user_id):
+                        return False
+                return True
+        if not file.is_dir and file.deleted == False:
+            if get_delete_rights(db, file_id, user_id):
+                return True
+    return False
