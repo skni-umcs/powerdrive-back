@@ -8,6 +8,7 @@ from src.user.schemas import User
 from src.sharefiles import service
 from src.sharefiles.exceptions import NotAuthorizedShareFileException, FileNotFoundException, \
     ShareFileNotFoundException, ShareFileWrongPermissionException
+from src.files.schemas import FileMetadata
 
 
 api_router = APIRouter(prefix="/share/file", tags=["sharefile"])
@@ -75,3 +76,21 @@ async def delete_share(share_id: int, current_user: User = Depends(get_current_u
     except ShareFileNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+
+@api_router.get("/me/files", response_model=list[FileMetadata])
+async def get_all_files_for_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service.get_shared_files(current_user=current_user, db=db)
+
+@api_router.get("/me/dir", response_model=list[FileMetadata])
+async def get_shared_dirs_for_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service.get_shared_dir(current_user=current_user, db=db)
+
+
+@api_router.get("/me/files/{dir_id}/all", response_model=list[FileMetadata])
+async def get_file_from_dir_for_user(dir_id: int, current_user: User = Depends(get_current_user),
+                                     db: Session = Depends(get_db)):
+    return service.get_shared_files_in_dir(current_user=current_user, dir_id=dir_id, db=db)
+
+@api_router.get("/me/files/shared", response_model=list[FileMetadata])
+async def get_shared_files_for_user(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service.get_files_for_shares(current_user=current_user, db=db)

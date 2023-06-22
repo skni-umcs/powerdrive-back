@@ -545,14 +545,14 @@ def check_if_access_to_delete_folder(db: Session, file_id: int, user_id: int):
                                            DbFileMetadata.is_deleted == False,).first()
 
     if file:
-        if file.is_dir and file.deleted == False:
+        if file.is_dir and file.is_deleted == False:
             if get_delete_rights(db, file_id, user_id):
                 children = get_children(db, file_id, user_id)
                 for child in children:
                     if not check_if_access_to_delete_folder(db, child.id, user_id):
                         return False
                 return True
-        if not file.is_dir and file.deleted == False:
+        if not file.is_dir and file.is_deleted == False:
             if get_delete_rights(db, file_id, user_id):
                 return True
     return False
