@@ -400,17 +400,20 @@ def change_file_content_on_disk(db: Session, file_id: int, file_data: UploadFile
     return file_metadata
 
 
-def get_children(db: Session, file_id: int, owner_id: int) -> list[DbFileMetadata]:
+def get_children(db: Session, file_id: int, user_id: int) -> list[DbFileMetadata]:
     """
     Get children files of file
     :param db: SQLAlchemy session
     :param file_id: id of file
-    :param owner_id: id of user
+    :param user_id: id of user
     :return: List of DbFileMetadata objects
     """
+    if get_read_rights(db, file_id, user_id) is False:
+        raise FileNotFoundException(file_id)
+
 
     return db.query(DbFileMetadata).filter(DbFileMetadata.parent_id == file_id,
-                                           DbFileMetadata.owner_id == owner_id,
+                                           # DbFileMetadata.owner_id == owner_id,
                                            DbFileMetadata.is_deleted == False).all()
 
 
@@ -547,7 +550,7 @@ def check_if_access_to_delete_folder(db: Session, file_id: int, user_id: int):
     if file:
         if file.is_dir and file.is_deleted == False:
             if get_delete_rights(db, file_id, user_id):
-                children = get_children(db, file_id, user_id)
+                children = get_children_files(db, file_id, file.owner_id)
                 for child in children:
                     if not check_if_access_to_delete_folder(db, child.id, user_id):
                         return False
