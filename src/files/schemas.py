@@ -35,16 +35,16 @@ class FileMetadataBase(BaseModel):
         return v
 
     # chcek if path contains filename and if it is directory
-    @root_validator()
-    def check_path_and_filename(cls, values):
-        path: str = values.get('path')
-        filename = values.get('filename')
-        is_dir = values.get('is_dir')
-        if is_dir and not path.endswith(filename):
-            raise ValueError('Path for dir must end with dirname')
-        # if not is_dir and path.endswith(filename):
-        # raise ValueError('Path must not end with filename')
-        return values
+    # @root_validator()
+    # def check_path_and_filename(cls, values):
+    #     path: str = values.get('path')
+    #     filename = values.get('filename')
+    #     is_dir = values.get('is_dir')
+    #     if is_dir and not path.endswith(filename):
+    #         raise ValueError('Path for dir must end with dirname')
+    #     # if not is_dir and path.endswith(filename):
+    #     # raise ValueError('Path must not end with filename')
+    #     return values
 
     # replace multiple slashes with one
 
