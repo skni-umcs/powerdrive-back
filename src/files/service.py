@@ -399,15 +399,7 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
         raise FileNotFoundException(file_metadata_update.id)
     file_metadata = get_file_metadata_by_id(db, file_metadata_update.id, owner_id)
 
-
     ### CHECK IF NEW NAME
-
-    if file_metadata_update.filename != file_metadata.filename:
-
-        if check_if_file_exists_in_db(db, file_metadata_update.filename, file_metadata.path,
-                                      owner_id) or check_if_file_exists_in_disk(file_metadata.path, file_metadata.owner_id,
-                                                                                file_metadata_update.filename, ):
-            raise FileAlreadyExistsException(file_metadata_update.filename)
 
     if file_metadata_update.filename != file_metadata.filename or file_metadata_update.path != file_metadata.path:
         if check_if_file_exists_in_db(db, file_metadata_update.path, file_metadata_update.filename, file_metadata.owner_id):
@@ -424,6 +416,7 @@ def update_file(db: Session, file_metadata_update: FileMetadataUpdate, owner_id:
             create_needed_dirs_in_db(db, file_metadata_update.path, file_metadata.owner_id)
 
             # move file on disk
+
 
             move_file_on_disk(file_metadata.path + "/" + file_metadata.filename,
                               file_metadata_update.path + "/" + file_metadata_update.filename, file_metadata.owner_id)
