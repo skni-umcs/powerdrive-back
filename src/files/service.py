@@ -261,17 +261,17 @@ def delete_file_by_id(db: Session, file_id: int, owner_id: int):
     :param owner_id: id of user
     :return: None
     """
-    file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
-
-    if get_delete_rights(db, file_metadata.id, owner_id) is False:
-        raise FileNotFoundException(file_id)
-
-    if file_metadata.is_dir:
-        if check_if_access_to_delete_folder(db, file_metadata.id, owner_id) is False:
-            raise FileNotFoundException(file_id)
-        delete_dir(db, file_metadata, file_metadata.owner_id)
+    if get_delete_rights(db, file_id, owner_id):
+        file_metadata = get_file_metadata_by_id(db, file_id, owner_id)
+        if file_metadata:
+            if file_metadata.is_dir:
+                if check_if_access_to_delete_folder(db, file_metadata.id, owner_id) is False:
+                    raise FileNotFoundException(file_id)
+                delete_dir(db, file_metadata, file_metadata.owner_id)
+            else:
+                delete_file(db, file_metadata, file_metadata.owner_id)
     else:
-        delete_file(db, file_metadata, file_metadata.owner_id)
+        raise FileNotFoundException(file_id)
 
 
 def move_file_on_disk(old_path, new_path, owner_id):
