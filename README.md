@@ -17,6 +17,13 @@ Powerdrive is a website that allows you to store and share files. It also provid
   </tr>
 </table>
 
+## Images
+
+<img src="https://github.com/skni-umcs/inventary-front/assets/42646328/8a422e71-ad0f-4e17-98c6-4e02f97bec9c" width="49%;" alt="Website screenshot 1"/>
+<img src="https://github.com/skni-umcs/inventary-front/assets/42646328/37398b08-28d6-4475-aa8c-e01a7ef08c83" width="49%;" alt="Website screenshot 2"/>
+<img src="https://github.com/skni-umcs/inventary-front/assets/42646328/7087a0af-c02c-4648-a669-ef15684bb327" width="49%;" alt="Website screenshot 3"/>
+<img src="https://github.com/skni-umcs/inventary-front/assets/42646328/0c30ca09-d0e1-4794-8ff2-fb1e0713b5b9" width="49%;" alt="Website screenshot 4"/>
+
 [//]: # (## Installation)
 
 ## Requirements
