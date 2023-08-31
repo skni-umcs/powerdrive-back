@@ -13,7 +13,7 @@ Powerdrive is a website that allows you to store and share files. It also provid
     <td align="center"><a href="https://github.com/jasieqb"><img src="https://avatars.githubusercontent.com/u/37178939?v=4" width="110px;" alt=""/><br /><sub><b>Jan Bylina</b></sub></a></td>
     <td align="center"><a href="https://github.com/kingastec"><img src="https://avatars.githubusercontent.com/u/78658172?v=4" width="110px;" alt=""/><br /><sub><b>Kinga Stec</b></sub></a></td>
     <td align="center"><a href="https://github.com/michalatra"><img src="https://avatars.githubusercontent.com/u/79483588?v=4" width="110px;" alt=""/><br /><sub><b>Michał Latra</b></sub></a></td>
-    <td align="center"><a href="https://github.com/ciniss"><img src="https://avatars.githubusercontent.com/u/73825209?v=4" width="110px;" alt=""/><br /><sub><b>Bartosz Dąbrowski</b></sub></a></td>
+    <td align="center"><a href="https://github.com/ciniss"><img src="https://avatars.githubusercontent.com/u/73825209?v=4" width="110px;" alt=""/><br /><sub><b>Bartłomiej Dąbrowski</b></sub></a></td>
   </tr>
 </table>
 
