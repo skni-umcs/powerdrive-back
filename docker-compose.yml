@@ -19,7 +19,7 @@ services:
         condition: service_healthy
 #    environment:
   db:
-    image: postgres
+    image: postgres:15
     ports:
       - "5433:5432"
     environment:

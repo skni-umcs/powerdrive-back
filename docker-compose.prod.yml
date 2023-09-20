@@ -20,7 +20,7 @@ services:
     environment:
       - PD_ROOT_PATH=/api
   db:
-    image: postgres
+    image: postgres:15
     ports:
       - "5433:5432"
     environment:
